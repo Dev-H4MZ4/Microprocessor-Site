@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Solutions | Microprocessor 8085</title>
+
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+
+
+    <style>
+        body { background-color: #f8fafc; scroll-behavior: smooth; }
+        .font-en { font-family: 'Inter', sans-serif; }
+        .font-ar { font-family: 'Cairo', sans-serif; }
+        .font-code { font-family: 'Fira Code', monospace; }
+
+
+        /* RTL & Mixed Text Fixes */
+        .is-rtl { direction: rtl; text-align: right; }
+        .is-rtl code, .is-rtl .en-term {
+            direction: ltr;
+            unicode-bidi: isolate;
+            display: inline-block;
+        }
+        
+        /* Code Window */
+        .code-window {
+            background: #1e1e2e;
+            border-radius: 8px;
+            overflow: hidden;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            margin-top: 15px;
+            border: 1px solid #313244;
+            direction: ltr; /* Always LTR for code */
+            text-align: left;
+        }
+        .code-header {
+            background: #181825;
+            padding: 8px 12px;
+            color: #6c7086;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .code-content {
+            padding: 15px;
+            color: #cdd6f4;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+
+        /* Syntax Colors */
+        .asm-cmd { color: #cba6f7; font-weight: bold; }
+        .asm-reg { color: #89b4fa; font-weight: bold; }
+        .asm-num { color: #fab387; }
+        .asm-comment { color: #6c7086; font-style: italic; }
+        .asm-label { color: #a6e3a1; font-weight: bold; }
+
+
+        /* Transition */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        
+        [v-cloak] { display: none; }
+    </style>
+</head>
+
+
+<body class="antialiased text-slate-800">
+
+
+    <div id="app" v-cloak class="min-h-screen flex flex-col">
+
+
+        <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-en font-bold text-sm">
+                    <i class="ph-bold ph-arrow-left text-lg"></i>
+                    <span class="hidden md:inline">Back to Home</span>
+                </a>
+                
+                <div class="absolute left-1/2 transform -translate-x-1/2 text-center">
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-widest font-en">Past Papers</span>
+                    <h1 class="font-en font-bold text-slate-800 text-sm md:text-base">Exam Solutions</h1>
+                </div>
+
+
+                <button @click="toggleLanguage"
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-xs font-bold font-en"
+                    :class="showArabic ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'">
+                    <i class="ph-fill ph-translate text-lg"></i>
+                    <span>{{ showArabic ? 'AR : ON' : 'AR : OFF' }}</span>
+                </button>
+            </div>
+        </nav>
+
+
+        <header class="bg-slate-900 text-white py-12 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/50 to-purple-900/50"></div>
+            <div class="container mx-auto px-4 relative z-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-en mb-4">
+                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                    Solved Exams
+                </div>
+                <h1 class="text-3xl md:text-5xl font-en font-black mb-4">Exam Models & Solutions</h1>
+                
+                <div class="max-w-xl mx-auto min-h-[3rem]">
+                    <p v-if="showArabic" class="font-ar text-slate-300 text-lg md:text-xl is-rtl fade-enter-active">
+                        حلول تفصيلية لنماذج الامتحانات للأعوام (2023 - 2024 - 2025).
+                    </p>
+                    <p v-else class="font-en text-slate-400 text-sm md:text-base fade-enter-active">
+                        Detailed solutions for exam models (2023 - 2024 - 2025).
+                    </p>
+                </div>
+            </div>
+        </header>
+
+
+        <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
+
+
+            <div class="sticky top-20 z-40 bg-[#f8fafc]/95 backdrop-blur-sm pt-2 mb-8 border-b border-slate-200 overflow-x-auto no-scrollbar">
+                <div class="flex justify-center min-w-max px-2">
+                    <button v-for="tab in tabs" :key="tab.id"
+                        @click="activeTab = tab.id"
+                        class="px-6 py-3 font-en font-bold text-sm transition-all border-b-2 whitespace-nowrap outline-none"
+                        :class="activeTab === tab.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'">
+                        {{ tab.name }}
+                    </button>
+                </div>
+            </div>
+
+
+            <transition name="fade" mode="out-in">
+                <div :key="activeTab" class="space-y-6 pb-12">
+                    
+                    <div v-for="(q, index) in currentQuestions" :key="index" 
+                         class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 hover:shadow-md transition-shadow">
+                        
+                        <div class="mb-4">
+                            <span class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 block font-en">{{ q.label }}</span>
+                            
+                            <h3 v-if="!showArabic" class="font-en font-bold text-slate-800 text-lg leading-snug" v-html="q.text_en"></h3>
+                            <h3 v-else class="font-ar font-bold text-slate-800 text-lg leading-snug is-rtl" v-html="q.text_ar"></h3>
+                        </div>
+
+
+                        <div class="pt-4 border-t border-slate-100">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider font-en flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded">
+                                    <i class="ph-fill ph-check-circle"></i> Solution
+                                </span>
+                            </div>
+                            
+                            <div v-if="!showArabic" class="font-en text-slate-700 text-sm leading-relaxed space-y-2" v-html="q.answer_en"></div>
+                            <div v-else class="font-ar text-slate-700 text-sm leading-relaxed space-y-2 is-rtl" v-html="q.answer_ar"></div>
+
+
+                            <div v-if="q.code" class="code-window dir-ltr">
+                                <div class="code-header">
+                                    <span>ASM Solution</span>
+                                    <button @click="copyCode(q.code)" class="text-xs hover:text-white flex items-center gap-1 transition-colors">
+                                        <i class="ph-bold ph-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <pre class="code-content"><code v-html="highlightASM(q.code)"></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </transition>
+
+
+        </main>
+
+
+        <footer class="py-8 text-center text-slate-400 text-xs font-en border-t border-slate-200">
+            <p>IT Engineering - 2026</p>
+        </footer>
+
+
+    </div>
+
+
+    <script>
+        const { createApp, ref, computed } = Vue;
+
+
+        createApp({
+            setup() {
+                const showArabic = ref(true); // Default to Arabic if you prefer
+                const activeTab = ref('2025'); 
+                const tabs = [
+                    { id: '2025', name: 'Model 2024/2025' },
+                    { id: '2024', name: 'Model 2023/2024' },
+                    { id: '2023', name: 'Model 2022/2023' }
+                ];
+
+
+                const toggleLanguage = () => showArabic.value = !showArabic.value;
+
+
+                const copyCode = (text) => {
+                    navigator.clipboard.writeText(text);
+                    alert("Code copied!");
+                };
+
+
+                const highlightASM = (code) => {
+                    if (!code) return '';
+                    const instructions = /\b(MOV|MVI|LDA|STA|LHLD|SHLD|LXI|LDAX|STAX|XCHG|ADD|ADI|SUB|SUI|INR|DCR|INX|DCX|DAD|JMP|JZ|JNZ|JC|JNC|CALL|RET|HLT|OUT|IN|CMP|CPI|ORA|AND|XOR|CMA|SIM|RIM|EI|DI|RST)\b/ig;
+                    const registers = /\b(A|B|C|D|E|H|L|SP|PC|PSW|M)\b/g;
+                    const hex = /\b([0-9][0-9A-F]*H?|[0-9A-F]+H)\b/ig;
+                    const label = /\b([A-Z0-9_]+:)/ig;
+
+
+                    return code.split('\n').map(line => {
+                        let [codePart, ...commentParts] = line.split(';');
+                        let comment = commentParts.join(';');
+                        if (codePart) {
+                            codePart = codePart
+                                .replace(label, '<span class="asm-label">$1</span>')
+                                .replace(instructions, '<span class="asm-cmd">$1</span>')
+                                .replace(hex, '<span class="asm-num">$1</span>')
+                                .replace(registers, '<span class="asm-reg">$1</span>');
+                        }
+                        if (comment !== undefined && comment !== "") return `${codePart}<span class="asm-comment">;${comment}</span>`;
+                        return codePart;
+                    }).join('\n');
+                };
+
+
+                // --- DATA STORE (Dual Language) ---
+                const allQuestions = {
+                    '2024': [
+                        { 
+                            label: 'Q1-1', 
+                            text_en: 'How are 8085 instructions classified (Function & Word Length)?', 
+                            text_ar: 'كيف تصنف تعليمات 8085 (من حيث الوظيفة وطول الكلمة)؟',
+                            answer_en: '<b>Function:</b> Data Transfer, Arithmetic, Logical, Branching, Machine Control.<br><b>Word Length:</b> 1-Byte, 2-Byte, 3-Byte.', 
+                            answer_ar: '<b>حسب الوظيفة:</b> نقل البيانات، الحسابية، المنطقية، التفرع (Branching)، التحكم بالآلة.<br><b>حسب الطول:</b> 1-بايت، 2-بايت، 3-بايت.'
+                        },
+                        { 
+                            label: 'Q1-2', 
+                            text_en: 'How many memory locations addressed by 14 address lines?', 
+                            text_ar: 'كم عدد مواقع الذاكرة التي يمكن عنونتها بـ 14 خط عناوين؟',
+                            answer_en: 'Calculation: 2<sup>14</sup> = 16,384.<br>Answer: <b>16K locations</b>.', 
+                            answer_ar: 'الحساب: 2<sup>14</sup> = 16,384.<br>الإجابة: <b>16K موقع ذاكرة</b>.'
+                        },
+                        { 
+                            label: 'Q1-3', 
+                            text_en: 'Function of the Accumulator?', 
+                            text_ar: 'ما هي وظيفة المركم (Accumulator)؟',
+                            answer_en: 'Used to store 8-bit data and to perform/store results of arithmetic and logical operations.', 
+                            answer_ar: 'يستخدم لتخزين بيانات 8-بت ولإجراء وتخزين نتائج العمليات الحسابية والمنطقية.'
+                        },
+                        { 
+                            label: 'Q1-4', 
+                            text_en: 'What is a bus? Why is Data Bus bi-directional?', 
+                            text_ar: 'ما هو الناقل (Bus)؟ ولماذا ناقل البيانات ثنائي الاتجاه؟',
+                            answer_en: '<b>Bus:</b> Group of wires to transmit binary numbers.<br><b>Bi-directional:</b> Data flows both ways (CPU to Memory and Memory to CPU).', 
+                            answer_ar: '<b>الناقل:</b> مجموعة أسلاك لنقل الأرقام الثنائية.<br><b>ثنائي الاتجاه:</b> لأن البيانات تنتقل في الاتجاهين (من المعالج للذاكرة والعكس).'
+                        },
+                        { 
+                            label: 'Q2', 
+                            text_en: 'Explain the assembly Program: LXI D, 2000H...', 
+                            text_ar: 'اشرح برنامج التجميع التالي: LXI D, 2000H...',
+                            answer_en: 'The program moves a block of data from Source (3000H-3090H) to Destination (2000H-2090H) using a loop.', 
+                            answer_ar: 'يقوم البرنامج بنقل كتلة بيانات من المصدر (3000H) إلى الوجهة (2000H) باستخدام حلقة تكرار.'
+                        },
+                        { 
+                            label: 'Q3-a', 
+                            text_en: 'Functions of MAR and IR?', 
+                            text_ar: 'ما هي وظائف MAR و IR؟',
+                            answer_en: '<b>MAR:</b> Holds address of next instruction from PC to feed address bus.<br><b>IR:</b> Temporarily stores the current instruction being executed.', 
+                            answer_ar: '<b>MAR:</b> يحتفظ بالعنوان القادم من PC لتغذية ناقل العناوين.<br><b>IR:</b> يخزن التعليمة الحالية التي يتم تنفيذها بشكل مؤقت.'
+                        },
+                        { 
+                            label: 'Q4', 
+                            text_en: 'Transfer number from 1000H to 0200H (Register Indirect).', 
+                            text_ar: 'انقل رقم من 1000H إلى 0200H (عنونة غير مباشرة).',
+                            answer_en: 'Use LXI to point to addresses, LDAX to read, STAX to write.', 
+                            answer_ar: 'نستخدم LXI لتحديد العناوين، LDAX للقراءة، و STAX للكتابة.',
+                            code: 'LXI D, 1000H   ; Source\nLXI B, 0200H   ; Dest\nLDAX D         ; Load from 1000H\nSTAX B         ; Store to 0200H\nHLT'
+                        },
+                        { 
+                            label: 'Q5', 
+                            text_en: 'Load F8H, Increment, Display.', 
+                            text_ar: 'حمل القيمة F8H، قم بزيادتها، ثم اعرضها.',
+                            answer_en: 'Load immediate, Increment Register, Output.', 
+                            answer_ar: 'تحميل مباشر (MVI)، زيادة السجل (INR)، إخراج (OUT).',
+                            code: 'MVI A, 0F8H\nINR A\nOUT 0F9H'
+                        }
+                    ],
+                    '2023': [
+                        { 
+                            label: 'Q1-1', 
+                            text_en: 'Content of B, C, A after: MOV A,B then MOV C,A (B=28H, A=97H)', 
+                            text_ar: 'محتوى B, C, A بعد تنفيذ التعليمات (B=28H, A=97H)',
+                            answer_en: '1. MOV A,B -> A becomes 28H.<br>2. MOV C,A -> C becomes 28H.<br><b>Final:</b> A=28H, B=28H, C=28H.', 
+                            answer_ar: '1. A تأخذ قيمة B وتصبح 28H.<br>2. C تأخذ قيمة A وتصبح 28H.<br><b>النتيجة:</b> الكل يساوي 28H.'
+                        },
+                        { 
+                            label: 'Q1-2', 
+                            text_en: 'Program to transfer block XX50H-XX5FH to XX70H.', 
+                            text_ar: 'برنامج لنقل كتلة بيانات من XX50H-XX5FH إلى XX70H.',
+                            answer_en: 'Block size is 10H (16 bytes).', 
+                            answer_ar: 'حجم الكتلة هو 10H (أي 16 بايت).',
+                            code: 'START: MVI B, 10H     ; Counter 16\n       LXI D, XX70H   ; Dest\n       LXI H, XX50H   ; Source\nLOOP:  MOV A, M\n       STAX D\n       INX H\n       INX D\n       DCR B\n       JNZ LOOP\nEND:   JMP END'
+                        },
+                        { 
+                            label: 'Q2-a', 
+                            text_en: 'Define Opcode/Operand in "MOV H, L".', 
+                            text_ar: 'عرف Opcode و Operand في "MOV H, L".',
+                            answer_en: '<b>Opcode:</b> MOV (Operation).<br><b>Operand:</b> H, L (Data to operate on).', 
+                            answer_ar: '<b>Opcode:</b> هو MOV (العملية).<br><b>Operand:</b> هما H, L (المعاملات).'
+                        },
+                        { 
+                            label: 'Q2-b', 
+                            text_en: 'Read Port 0E, Display at 07, Store to Memory.', 
+                            text_ar: 'اقرأ منفذ 0E، اعرض في 07، وخزن في الذاكرة.',
+                            answer_en: 'Read Input -> Save/Display -> Store to Memory.', 
+                            answer_ar: 'قراءة الدخل -> عرض الخرج -> تخزين في الذاكرة.',
+                            code: 'IN 0EH        ; Read Port 0E\nOUT 07H       ; Display at 07\nIN 07H        ; Read Port 07\nMOV M, A      ; Store to HL location\nHLT'
+                        },
+                        { 
+                            label: 'Q5', 
+                            text_en: 'Trace PC, Stack, SP: CALL ENG1 (PC=2002, SP=1000H).', 
+                            text_ar: 'تتبع PC, Stack, SP عند تنفيذ CALL ENG1.',
+                            answer_en: '<b>Before:</b> PC=2002, SP=1000H.<br><b>After:</b> Return Addr (2005H) pushed. SP=0FFEH. PC=2030H (Subroutine Addr).', 
+                            answer_ar: '<b>قبل:</b> PC=2002, SP=1000H.<br><b>بعد:</b> عنوان العودة (2005H) يخزن في المكدس. SP يصبح 0FFEH. الـ PC ينتقل لعنوان الدالة.'
+                        }
+                    ],
+                    '2025': [
+                        { 
+                            label: 'Q1-a', 
+                            text_en: 'What occurs during each pass of a two-pass assembler?', 
+                            text_ar: 'ماذا يحدث في كل مرحلة من مجمع Two-pass Assembler؟',
+                            answer_en: '<b>Pass 1:</b> Reads program to collect labels and assign memory addresses (Symbol Table).<br><b>Pass 2:</b> Translates opcodes/operands to machine code using the table.', 
+                            answer_ar: '<b>Pass 1:</b> يقرأ البرنامج لجمع العناوين والملصقات (Symbol Table).<br><b>Pass 2:</b> يترجم الأكواد إلى لغة الآلة باستخدام الجدول.'
+                        },
+                        { 
+                            label: 'Q1-c', 
+                            text_en: 'Trace PC, Stack, SP: CALL loop1 (at 2002H).', 
+                            text_ar: 'تتبع PC, Stack, SP للأمر CALL loop1 (عند 2002H).',
+                            answer_en: '<b>Before:</b> SP=1000H, PC=2002H.<br><b>After:</b> SP=0FFEH. PC=2030H. Stack contains 2005H.', 
+                            answer_ar: '<b>قبل:</b> SP=1000H, PC=2002H.<br><b>بعد:</b> SP يصبح 0FFEH. الـ PC يصبح 2030H. المكدس يحتوي 2005H.'
+                        },
+                        { 
+                            label: 'Q1-d', 
+                            text_en: 'Difference: Repeat-Until vs Do-While?', 
+                            text_ar: 'الفرق بين Repeat-Until و Do-While؟',
+                            answer_en: '<b>Repeat-Until:</b> Process first, then Check. Runs at least once.<br><b>Do-While:</b> Check first, then Process.', 
+                            answer_ar: '<b>Repeat-Until:</b> ينفذ العملية أولاً ثم يفحص الشرط (تنفذ مرة واحدة على الأقل).<br><b>Do-While:</b> يفحص الشرط أولاً ثم ينفذ.'
+                        },
+                        { 
+                            label: 'Q2-b', 
+                            text_en: 'Add 89H + 79H. Specify A and Flags.', 
+                            text_ar: 'اجمع 89H + 79H. حدد قيمة A والرايات (Flags).',
+                            answer_en: '89H + 79H = 102H.<br><b>A = 02H</b>.<br>Flags: <b>CY=1</b>, S=0, Z=0, AC=1, P=0.', 
+                            answer_ar: 'الناتج 102H.<br><b>Accumulator = 02H</b>.<br>الرايات: <b>CY=1</b>, S=0, Z=0, AC=1, P=0.'
+                        },
+                        { 
+                            label: 'Q3-a', 
+                            text_en: 'Conditional jump to check if two numbers are equal?', 
+                            text_ar: 'أمر قفز شرطي للتحقق من تساوي رقمين؟',
+                            answer_en: '<b>JZ</b> (Jump if Zero). Because CMP performs subtraction (Result 0 = Equal).', 
+                            answer_ar: '<b>JZ</b> (القفز إذا كان صفر). لأن المقارنة طرح، وإذا تساووا فالناتج صفر.'
+                        },
+                        { 
+                            label: 'Q4-a', 
+                            text_en: 'Transfer 80 bytes from 1000H to 0100H.', 
+                            text_ar: 'نقل 80 بايت من 1000H إلى 0100H.',
+                            answer_en: 'Use B as counter (80 decimal = 50H).', 
+                            answer_ar: 'نستخدم B كعداد (80 عشري = 50H بالنظام السداسي).',
+                            code: 'START: MVI B, 50H     ; Counter 80\n       LXI D, 0100H   ; Dest\n       LXI H, 1000H   ; Source\nLOOP:  MOV A, M\n       STAX D\n       INX H\n       INX D\n       DCR B\n       JNZ LOOP\nEND:   JMP END'
+                        },
+                        { 
+                            label: 'Q6-a', 
+                            text_en: 'Content of 1200H/1201H after SHLD 1200H (H=A1, L=2B).', 
+                            text_ar: 'محتوى 1200H/1201H بعد SHLD 1200H (علما H=A1, L=2B).',
+                            answer_en: 'SHLD stores L in lower address, H in higher.<br><b>1200H:</b> 2B (L).<br><b>1201H:</b> A1 (H).', 
+                            answer_ar: 'الأمر يخزن L في العنوان الأقل و H في العنوان الأعلى.<br><b>1200H:</b> فيها 2B.<br><b>1201H:</b> فيها A1.'
+                        },
+                        { 
+                            label: 'Q6-b', 
+                            text_en: 'Output 10 bytes from 1234H to Port 95H.', 
+                            text_ar: 'إخراج 10 بايت من 1234H إلى المنفذ 95H.',
+                            answer_en: 'Loop with OUT instruction.', 
+                            answer_ar: 'حلقة تكرار مع تعليمة OUT.',
+                            code: '       LXI H, 1234H\n       MVI B, 0AH     ; Count 10\nLOOP:  MOV A, M\n       OUT 95H\n       INX H\n       DCR B\n       JNZ LOOP\n       HLT'
+                        }
+                    ]
+                };
+
+
+                const currentQuestions = computed(() => allQuestions[activeTab.value]);
+
+
+                return { showArabic, toggleLanguage, activeTab, tabs, currentQuestions, highlightASM, copyCode };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+
+</html>
+

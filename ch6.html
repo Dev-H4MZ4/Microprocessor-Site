@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 6: Structured Programming | Microprocessor 8085</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { background-color: #f8fafc; }
+        
+        /* Fonts */
+        .font-en { font-family: 'Inter', sans-serif; }
+        .font-ar { font-family: 'Cairo', sans-serif; }
+        .font-code { font-family: 'Fira Code', monospace; }
+
+        /* RTL Fixes */
+        .is-rtl {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+        .is-rtl code, 
+        .is-rtl .en-term {
+            direction: ltr;
+            unicode-bidi: isolate; 
+            font-family: 'Fira Code', monospace;
+            background-color: #f1f5f9;
+            padding: 0 4px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            display: inline-block; 
+        }
+        .is-rtl ul { padding-right: 1.5rem; padding-left: 0; }
+
+        /* Code Window */
+        .code-window {
+            background: #1e1e2e;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            border: 1px solid #313244;
+            overflow: hidden;
+            direction: ltr;
+            text-align: left;
+        }
+        .window-header {
+            background: #181825;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #313244;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+
+        /* Syntax Highlighting */
+        .asm-cmd { color: #cba6f7; font-weight: bold; } 
+        .asm-reg { color: #89b4fa; font-weight: bold; }
+        .asm-num { color: #fab387; }
+        .asm-comment { color: #6c7086; font-style: italic; }
+        .asm-label { color: #94e2d5; font-weight: bold; }
+
+        [v-cloak] { display: none; }
+    </style>
+</head>
+
+<body class="antialiased text-slate-800">
+
+    <div id="app" v-cloak class="min-h-screen flex flex-col">
+
+        <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-en font-bold text-sm">
+                    <i class="ph-bold ph-arrow-left text-lg"></i>
+                    <span class="hidden md:inline">Back to Home</span>
+                </a>
+                
+                <div class="absolute left-1/2 transform -translate-x-1/2 text-center">
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-widest font-en">Chapter 6</span>
+                    <h1 class="font-en font-bold text-slate-800 text-sm md:text-base">Structured Programming</h1>
+                </div>
+
+                <button @click="toggleLanguage"
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-xs font-bold font-en"
+                    :class="showArabic ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'">
+                    <i class="ph-fill ph-translate text-lg"></i>
+                    <span>{{ showArabic ? 'AR : ON' : 'AR : OFF' }}</span>
+                </button>
+            </div>
+        </nav>
+
+        <header class="bg-slate-900 text-white py-12 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-cyan-900/50 to-blue-900/50"></div>
+            <div class="container mx-auto px-4 relative z-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-en mb-4">
+                    <span class="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+                    Logic & Flowcharts
+                </div>
+                <h1 class="text-3xl md:text-5xl font-en font-black mb-4">Structured Programming</h1>
+                
+                <div class="max-w-xl mx-auto min-h-[3rem]">
+                    <p v-if="showArabic" class="font-ar text-slate-300 text-lg md:text-xl is-rtl">
+                        البرمجة الهيكلية، المخططات الانسيابية (Flow Charts)، وتراكيب المنطق الأربعة.
+                    </p>
+                    <p v-else class="font-en text-slate-400 text-sm md:text-base">
+                        Programming Methodology, Flow Charts Symbols, and The 4 Logic Constructs.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 py-12 max-w-4xl space-y-12">
+
+            <section v-for="(section, index) in chapterData" :key="index" class="scroll-mt-24">
+                
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 mb-6 border-b border-slate-200 pb-2">
+                    <h2 class="text-2xl font-en font-bold text-slate-800">{{ section.title_en }}</h2>
+                    <span v-if="showArabic" class="text-lg font-ar text-blue-600 is-rtl w-full md:w-auto md:ml-auto">
+                        {{ section.title_ar }}
+                    </span>
+                </div>
+
+                <div class="mb-6 space-y-2" v-if="section.desc_en">
+                    <p class="font-en text-slate-600 leading-relaxed" v-html="section.desc_en"></p>
+                    <div v-if="showArabic" class="is-rtl bg-blue-50/50 p-3 rounded-lg border-r-4 border-blue-400">
+                        <p class="font-ar text-slate-600 text-sm leading-relaxed" v-html="section.desc_ar"></p>
+                    </div>
+                </div>
+
+                <div class="grid gap-6">
+                    <div v-for="(item, idx) in section.items" :key="idx"
+                        class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden">
+
+                        <div class="absolute left-0 top-0 h-full w-1" :class="section.colorClass"></div>
+
+                        <div v-if="item.type === 'list'">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-en font-bold text-lg text-slate-800" v-html="item.head_en"></h3>
+                                <span v-if="item.badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-cyan-100 text-cyan-700 font-en border border-cyan-200">
+                                    {{ item.badge }}
+                                </span>
+                            </div>
+                            <div class="grid gap-3">
+                                <div class="font-en text-slate-600 text-sm leading-relaxed pl-2 border-l border-slate-200">
+                                    <span v-html="item.text_en"></span>
+                                </div>
+                                <div v-if="showArabic" class="is-rtl font-ar text-slate-600 text-sm leading-relaxed pr-2 border-r border-blue-200">
+                                    <span v-html="item.text_ar"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'table'" class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-en text-slate-500">
+                                        <th v-for="h in item.headers" class="p-3">{{ h }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm font-en">
+                                    <tr v-for="row in item.rows" class="border-b border-slate-50 hover:bg-slate-50/50">
+                                        <td v-for="cell in row" class="p-3 text-slate-700 font-medium" v-html="cell"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div v-if="item.type === 'code'" class="dir-ltr">
+                            <div class="code-window">
+                                <div class="window-header">
+                                    <div class="flex gap-1.5">
+                                        <div class="dot bg-red-400"></div>
+                                        <div class="dot bg-yellow-400"></div>
+                                        <div class="dot bg-green-400"></div>
+                                    </div>
+                                    <div class="ml-auto text-[10px] font-code text-slate-500 uppercase opacity-60">ASM Source</div>
+                                </div>
+                                <pre class="m-0 bg-[#1e1e2e] p-5 overflow-x-auto"><code class="font-code text-sm !bg-transparent p-0 text-slate-200 block" v-html="highlightASM(item.code)"></code></pre>
+                            </div>
+                            <div class="mt-4 border-t border-slate-100 pt-3">
+                                <h4 class="font-en font-bold text-xs text-slate-500 uppercase mb-2">Analysis:</h4>
+                                <div class="font-en text-sm text-slate-600 mb-3" v-html="item.exp_en"></div>
+                                <div v-if="showArabic" class="is-rtl font-ar text-sm text-blue-800 bg-blue-50 p-3 rounded border-r-2 border-blue-400">
+                                    <span v-html="item.exp_ar"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'tip'" class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                            <h3 class="font-en font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                <i class="ph-fill ph-lightbulb"></i> {{ item.head_en }}
+                            </h3>
+                            <div class="space-y-2">
+                                <p class="font-en text-sm text-amber-900" v-html="item.text_en"></p>
+                                <p v-if="showArabic" class="is-rtl font-ar text-sm text-amber-900 border-r-2 border-amber-400 pr-2" v-html="item.text_ar"></p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="py-8 text-center text-slate-400 text-xs font-en border-t border-slate-200">
+            <p>IT Engineering - 2026 | 8085 Microprocessor Course</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+
+        createApp({
+            setup() {
+                const showArabic = ref(true);
+                const toggleLanguage = () => showArabic.value = !showArabic.value;
+
+                // --- Improved Syntax Highlighter ---
+                const highlightASM = (code) => {
+                    if (!code) return '';
+                    
+                    // Added: OUT, CMP, CPI, INX
+                    const instructions = /\b(MOV|MVI|LDA|STA|LHLD|SHLD|LXI|LDAX|STAX|XCHG|ADD|ADI|SUB|SUI|INR|DCR|INX|DCX|DAD|JMP|JZ|JNZ|JC|JNC|CALL|RET|HLT|OUT|IN|CMP|CPI)\b/ig;
+                    const registers = /\b(A|B|C|D|E|H|L|SP|PC|PSW|M)\b/g;
+                    const hex = /\b([0-9][0-9A-F]*H?|[0-9A-F]+H)\b/ig;
+                    const label = /\b([A-Z0-9_]+:)/ig;
+
+                    return code.split('\n').map(line => {
+                        let [codePart, ...commentParts] = line.split(';');
+                        let comment = commentParts.join(';');
+
+                        if (codePart) {
+                            codePart = codePart
+                                .replace(label, '<span class="asm-label">$1</span>')
+                                .replace(instructions, '<span class="asm-cmd">$1</span>')
+                                .replace(hex, '<span class="asm-num">$1</span>')
+                                .replace(registers, '<span class="asm-reg">$1</span>');
+                        }
+                        if (comment !== undefined && comment !== "") return `${codePart}<span class="asm-comment">;${comment}</span>`;
+                        return codePart;
+                    }).join('\n');
+                };
+
+                // --- DATA STORE ---
+                const chapterData = ref([
+                    {
+                        title_en: "Part 1: Core Concepts & Definitions",
+                        title_ar: "المفاهيم الأساسية والتعريفات",
+                        colorClass: "bg-indigo-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "Structured Assembly Programming",
+                                text_en: "• <b>Definition:</b> A programming methodology designed to aid in the development of complicated software with a minimum amount of error.<br>• <b>Key Tool:</b> It relies heavily on <b>Flow Charts</b> to solve problems.",
+                                text_ar: "• <b>التعريف:</b> منهجية برمجة مصممة للمساعدة في تطوير البرمجيات المعقدة بأقل قدر من الأخطاء.<br>• <b>الأداة الرئيسية:</b> تعتمد بشكل كبير على <b>المخططات الانسيابية (Flow Charts)</b> لحل المشاكل."
+                            },
+                            {
+                                type: "list",
+                                head_en: "The Role of Flow Charts",
+                                text_en: "• <b>Purpose:</b> Used to design structured programs and help programmers correct/modify software.<br>• <b>Structure:</b> Uses specific symbols to represent processes, visualizing logic.",
+                                text_ar: "• <b>الهدف:</b> تستخدم لتصميم البرامج الهيكلية وتساعد المبرمجين في تعديل وتصحيح البرامج.<br>• <b>التركيب:</b> تستخدم رموزاً محددة لتمثيل العمليات، مما يسهل تخيل المنطق."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Part 2: The Programmer's Toolkit (Symbols)",
+                        title_ar: "أدوات المبرمج (رموز المخططات)",
+                        desc_en: "Memorize these symbols as they are the building blocks of logic diagrams.",
+                        desc_ar: "يجب حفظ هذه الرموز لأنها اللبنات الأساسية للمخططات المنطقية.",
+                        colorClass: "bg-blue-600",
+                        items: [
+                            {
+                                type: "table",
+                                headers: ["Symbol Shape", "Name", "Function", "Example"],
+                                rows: [
+                                    ["<b>Rectangle</b>", "Process", "Arithmetic or procedural operation.", "<code>Compute grade</code>"],
+                                    ["<b>Rectangle (Double)</b>", "Predefined Process", "Invokes a subroutine/module.", "<code>Average</code>"],
+                                    ["<b>Parallelogram</b>", "Input/Output", "Reading/Displaying data.", "<code>Read score</code>"],
+                                    ["<b>Diamond</b>", "Decision", "Asks a question (Yes/No). Determines direction.", "<code>Is it true?</code>"],
+                                    ["<b>Circle</b>", "Connector", "Connects lines to avoid crisscrossing.", "Labeled circles"],
+                                    ["<b>Oval / Capsule</b>", "Terminal", "Start or End point.", "<code>Start</code> / <code>End</code>"]
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Part 3: The Four Logic Constructs",
+                        title_ar: "تراكيب المنطق الأربعة (هام جداً)",
+                        desc_en: "Structured programming relies on four specific ways to control the flow of execution.",
+                        desc_ar: "تعتمد البرمجة الهيكلية على أربع طرق محددة للتحكم في تدفق التنفيذ.",
+                        colorClass: "bg-teal-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "1. The If-Then Construct",
+                                text_en: "• <b>Logic:</b> Checks a condition. If True, performs process. If False, skips it.<br>• <b>Flowchart:</b> One path goes to process, other bypasses it. Both merge at exit.",
+                                text_ar: "• <b>المنطق:</b> يفحص شرطاً. إذا تحقق (True) ينفذ العملية. إذا لم يتحقق (False) يتجاوزها.<br>• <b>المخطط:</b> مسار يذهب للعملية، والآخر يتجاوزها، ويلتقيان في النهاية."
+                            },
+                            {
+                                type: "list",
+                                head_en: "2. The If-Then-Else Construct",
+                                text_en: "• <b>Logic:</b> Checks condition. If True, performs <b>Process A</b>. If False, performs <b>Process B</b>.<br>• <b>Difference:</b> Unlike If-Then, the 'False' path here executes a different task.",
+                                text_ar: "• <b>المنطق:</b> يفحص شرطاً. إذا تحقق ينفذ <b>Process A</b>. إذا لم يتحقق ينفذ <b>Process B</b>.<br>• <b>الفرق:</b> في الـ <code>If-Then</code> مسار الخطأ لا يفعل شيئاً، هنا يفعل شيئاً مختلفاً."
+                            },
+                            {
+                                type: "list",
+                                head_en: "3. Repeat-Until (Post-Test Loop)",
+                                text_en: "• <b>Logic:</b> Execute process <b>FIRST</b>, then check condition.<br>• <b>Key Feature:</b> Guaranteed to execute <b>at least once</b> because check is at the end.",
+                                text_ar: "• <b>المنطق:</b> نفذ العملية <b>أولاً</b>، ثم افحص الشرط.<br>• <b>ميزة جوهرية:</b> تضمن تنفيذ العملية <b>مرة واحدة على الأقل</b> لأن الفحص يأتي في النهاية."
+                            },
+                            {
+                                type: "list",
+                                head_en: "4. Do-While (Pre-Test Loop)",
+                                text_en: "• <b>Logic:</b> Check condition <b>FIRST</b>. If met, perform process and repeat.<br>• <b>Key Feature:</b> If condition is not met initially, process might <b>never</b> execute.",
+                                text_ar: "• <b>المنطق:</b> افحص الشرط <b>أولاً</b>. إذا تحقق، نفذ العملية وكرر.<br>• <b>ميزة جوهرية:</b> إذا لم يتحقق الشرط من البداية، قد <b>لا تنفذ</b> العملية أبداً."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Part 4: Solved Examples (Code Analysis)",
+                        title_ar: "أمثلة محلولة (تحليل الكود)",
+                        colorClass: "bg-emerald-500",
+                        items: [
+                            {
+                                type: "code",
+                                code: `        LDA TEMP       ; Load Temperature
+        MOV B, A       ; Save in B
+        LDA THERM      ; Load Thermostat Setting
+        CMP B          ; Compare (A - B)
+        
+        JC TWO         ; If Thermostat < Temp -> Go to TWO
+        JNC ONE        ; If Thermostat >= Temp -> Go to ONE
+
+TWO:    MVI A, 1       ; Code for Heater OFF
+        OUT HEATER     
+        JMP THREE      ; Skip 'ONE' block
+
+ONE:    MVI A, 0       ; Code for Heater ON
+        OUT HEATER     
+
+THREE:  ...            ; Exit`,
+                                exp_en: "<b>Example A: Heating System (If-Then-Else)</b><br>Compares Temp vs Thermostat. Based on Carry Flag, jumps to turn Heater ON or OFF. The <code>JMP THREE</code> ensures exclusive execution.",
+                                exp_ar: "<b>مثال أ: نظام التدفئة (If-Then-Else)</b><br>يقارن درجة الحرارة مع الترموستات. بناءً على راية الحمل (Carry)، يقفز لتشغيل أو إطفاء السخان. لاحظ استخدام <code>JMP THREE</code> لتجنب تنفيذ الكودين معاً."
+                            },
+                            {
+                                type: "code",
+                                code: `LOOP:   CALL READ      ; (1) Process: Read Input
+        MOV M, A       ; (2) Process: Store Data
+        INX H          ; (3) Process: Increment Ptr
+        
+        CPI 0DH        ; (4) Test: Check for CR (0D)
+        JNZ LOOP       ; (5) Decision: If not CR, Repeat`,
+                                exp_en: "<b>Example B: Reading Keyboard (Repeat-Until)</b><br>The processes (Read, Store, Increment) happen <b>before</b> the check (<code>CPI</code>). This ensures at least one character is read.",
+                                exp_ar: "<b>مثال ب: قراءة لوحة المفاتيح (Repeat-Until)</b><br>العمليات (قراءة، تخزين، زيادة) تحدث <b>قبل</b> الفحص (<code>CPI</code>). هذا يضمن قراءة حرف واحد على الأقل."
+                            },
+                            {
+                                type: "code",
+                                code: `LOOP:   CALL READ      ; Read Input
+        
+        CPI 0DH        ; (1) Test: Check CR first!
+        JZ OUTOF       ; (2) Decision: Exit if CR
+        
+        MOV M, A       ; (3) Process: Store (Only if valid)
+        INX H          ; (4) Process: Increment
+        JMP LOOP       ; Loop back
+        
+OUTOF:  ...            ; Exit Point`,
+                                exp_en: "<b>Example C: Reading Keyboard (Do-While)</b><br>The check (<code>CPI</code>) happens <b>before</b> storing. If the first key is CR, nothing is saved.",
+                                exp_ar: "<b>مثال ج: قراءة لوحة المفاتيح (Do-While)</b><br>الفحص (<code>CPI</code>) يحدث <b>قبل</b> التخزين. إذا كان الحرف الأول هو CR، يخرج فوراً ولا يخزن شيئاً."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Summary Checklist",
+                        title_ar: "قائمة المراجعة للامتحان",
+                        colorClass: "bg-slate-500",
+                        items: [
+                            { type: "list", head_en: "Symbols", text_en: "Memorize the 6 symbols: Process, Predefined, I/O, Decision, Connector, Terminal.", text_ar: "احفظ الرموز الستة: العملية، العملية المعرفة مسبقاً، الإدخال/الإخراج، القرار، الرابط، والطرفيات." },
+                            { type: "list", head_en: "Construct Differences", text_en: "If-Then (1 path) vs If-Then-Else (2 paths). Repeat-Until (Process first) vs Do-While (Test first).", text_ar: "فرق بين <code>If-Then</code> (مسار واحد) و <code>Else</code> (مسارين). وفرق بين <code>Repeat-Until</code> (العملية أولاً) و <code>Do-While</code> (الفحص أولاً)." },
+                            { type: "list", head_en: "Code Recognition", text_en: "Jump at bottom = Repeat-Until. Jump at top = Do-While.", text_ar: "<b>كيف تميز الكود؟</b><br>إذا كان القفز في الأسفل يعيدك للأعلى ← <code>Repeat-Until</code>.<br>إذا كان القفز في الأعلى يخرجك بره ← <code>Do-While</code>." }
+                        ]
+                    }
+                ]);
+
+                return { showArabic, toggleLanguage, chapterData, highlightASM };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>

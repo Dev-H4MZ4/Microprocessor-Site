@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 1: Architecture | Microprocessor 8085</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8fafc;
+        }
+
+        /* Typography */
+        .font-en {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-ar {
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .font-code {
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* Mac Code Window Style */
+        .code-window {
+            background: #1e1e2e;
+            /* خلفية داكنة جداً */
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            border: 1px solid #313244;
+            overflow: hidden;
+            direction: ltr;
+            /* الكود دائماً يسار */
+        }
+
+        .window-header {
+            background: #181825;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #313244;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        /* --- Manual Syntax Highlighting Classes (ألواننا الخاصة) --- */
+        .asm-cmd {
+            color: #cba6f7;
+            font-weight: bold;
+        }
+
+        /* موف للأوامر */
+        .asm-reg {
+            color: #89b4fa;
+            font-weight: bold;
+        }
+
+        /* أزرق للسجلات */
+        .asm-num {
+            color: #fab387;
+        }
+
+        /* برتقالي للأرقام */
+        .asm-comment {
+            color: #6c7086;
+            font-style: italic;
+        }
+
+        /* رمادي للتعليقات */
+        .asm-label {
+            color: #a6e3a1;
+            font-weight: bold;
+        }
+
+        /* أخضر للعناوين */
+    </style>
+</head>
+
+<body class="antialiased text-slate-800">
+
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+
+                <a href="index.html"
+                    class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-en font-bold text-sm">
+                    <i class="ph-bold ph-arrow-left text-lg"></i>
+                    <span class="hidden md:inline">Back to Home</span>
+                </a>
+
+                <div class="absolute left-1/2 transform -translate-x-1/2 text-center">
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-widest font-en">Chapter 1</span>
+                    <h1 class="font-en font-bold text-slate-800 text-sm md:text-base">Architecture</h1>
+                </div>
+
+                <button @click="toggleLanguage"
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-xs font-bold font-en"
+                    :class="showArabic ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'">
+                    <i class="ph-fill ph-translate text-lg"></i>
+                    <span>{{ showArabic ? 'AR : ON' : 'AR : OFF' }}</span>
+                </button>
+            </div>
+        </nav>
+
+        <header class="bg-slate-900 text-white py-12 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-900/50 to-purple-900/50"></div>
+            <div
+                class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent">
+            </div>
+
+            <div class="container mx-auto px-4 relative z-10 text-center">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-en mb-4">
+                    <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                    Internal Architecture
+                </div>
+                <h1 class="text-3xl md:text-5xl font-en font-black mb-4">The 8085 Processor</h1>
+
+                <transition name="fade">
+                    <p v-if="showArabic" class="font-ar text-slate-300 text-lg md:text-xl" dir="rtl">
+                        المعمارية الداخلية، السجلات، النواقل، ومجموعة التعليمات.
+                    </p>
+                    <p v-else class="font-en text-slate-400 text-sm md:text-base max-w-xl mx-auto">
+                        Detailed breakdown of the internal brain, registers, buses, and how instructions are processed.
+                    </p>
+                </transition>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 py-12 max-w-4xl space-y-12">
+
+            <section v-for="(section, index) in chapterData" :key="index" class="scroll-mt-24" :id="'sec-'+index">
+
+                <div class="flex items-baseline gap-4 mb-6 border-b border-slate-200 pb-2">
+                    <h2 class="text-2xl font-en font-bold text-slate-800">{{ section.title_en }}</h2>
+                    <span v-if="showArabic" class="text-lg font-ar text-blue-600 dir-rtl ml-auto md:ml-0">{{
+                        section.title_ar }}</span>
+                </div>
+
+                <div class="mb-6">
+                    <p class="font-en text-slate-600 leading-relaxed mb-2">{{ section.desc_en }}</p>
+                    <p v-if="showArabic"
+                        class="font-ar text-slate-500 text-sm leading-relaxed dir-rtl border-r-2 border-blue-400 pr-3 bg-blue-50/50 p-2 rounded-l-lg">
+                        {{ section.desc_ar }}
+                    </p>
+                </div>
+
+                <div class="grid gap-6">
+                    <div v-for="(item, idx) in section.items" :key="idx"
+                        class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden">
+
+                        <div class="absolute left-0 top-0 h-full w-1" :class="section.colorClass"></div>
+
+                        <div v-if="item.type === 'list'">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-en font-bold text-lg text-slate-800">{{ item.head_en }}</h3>
+                                <span v-if="item.badge"
+                                    class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 font-en">
+                                    {{ item.badge }}
+                                </span>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div
+                                    class="font-en text-slate-600 text-sm leading-relaxed pl-2 border-l border-slate-200">
+                                    <span v-html="item.text_en"></span>
+                                </div>
+                                <div v-if="showArabic"
+                                    class="font-ar text-slate-500 text-sm leading-relaxed dir-rtl pr-2 border-r border-blue-200">
+                                    <span v-html="item.text_ar"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'table'" class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr
+                                        class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-en text-slate-500">
+                                        <th class="p-3">Bus Name</th>
+                                        <th class="p-3">Width</th>
+                                        <th class="p-3">Direction</th>
+                                        <th class="p-3">Function</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm font-en">
+                                    <tr v-for="row in item.rows" class="border-b border-slate-50 hover:bg-slate-50/50">
+                                        <td class="p-3 font-bold text-blue-900">
+                                            {{ row.name_en }}
+                                            <div v-if="showArabic"
+                                                class="font-ar text-xs text-slate-400 font-normal mt-1">{{ row.name_ar
+                                                }}</div>
+                                        </td>
+                                        <td class="p-3 text-slate-600">{{ row.width }}</td>
+                                        <td class="p-3 text-slate-600">
+                                            {{ row.dir_en }}
+                                            <div v-if="showArabic" class="font-ar text-xs text-slate-400 mt-1">{{
+                                                row.dir_ar }}</div>
+                                        </td>
+                                        <td class="p-3 text-slate-600">
+                                            <div v-html="row.func_en"></div>
+                                            <div v-if="showArabic" class="font-ar text-xs text-slate-500 mt-1 dir-rtl"
+                                                v-html="row.func_ar"></div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div v-if="item.type === 'code'" class="dir-ltr">
+                            <div class="code-window">
+                                <div class="window-header">
+                                    <div class="flex gap-1.5">
+                                        <div class="dot bg-red-400"></div>
+                                        <div class="dot bg-yellow-400"></div>
+                                        <div class="dot bg-green-400"></div>
+                                    </div>
+                                    <div class="ml-auto text-[10px] font-code text-slate-500 uppercase opacity-60">ASM
+                                        8085</div>
+                                </div>
+                                <pre
+                                    class="m-0 bg-[#1e1e2e] p-5 overflow-x-auto"><code class="font-code text-sm !bg-transparent p-0 text-slate-200" v-html="highlightASM(item.code)"></code></pre>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <p class="font-en text-xs text-slate-400 mb-1">Simple Addition Program</p>
+                                <p v-if="showArabic" class="font-ar text-sm text-blue-600">برنامج بسيط لجمع رقمين</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="py-8 text-center text-slate-400 text-xs font-en border-t border-slate-200">
+            <p>IT Engineering - 2026</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+
+        createApp({
+            setup() {
+                const showArabic = ref(true);
+
+                const toggleLanguage = () => {
+                    showArabic.value = !showArabic.value;
+                };
+
+                // --- 1. Manual Syntax Highlighter (محرك التلوين اليدوي) ---
+                const highlightASM = (code) => {
+                    if (!code) return '';
+
+                    // قائمة التعليمات (كما هي)
+                    const instructions = /\b(MOV|MVI|LDA|STA|LHLD|SHLD|LXI|LDAX|STAX|XCHG|ADD|ADI|ADC|ACI|SUB|SUI|SBB|SBI|INR|DCR|INX|DCX|DAD|DAA|ANA|ANI|XRA|XRI|ORA|ORI|CMP|CPI|RLC|RRC|RAL|RAR|CMA|CMC|STC|JMP|JC|JNC|JZ|JNZ|JP|JM|JPE|JPO|CALL|CC|CNC|CZ|CNZ|CP|CM|CPE|CPO|RET|RC|RNC|RZ|RNZ|RP|RM|RPE|RPO|PCHL|RST|PUSH|POP|XTHL|SPHL|IN|OUT|EI|DI|HLT|NOP|RIM|SIM)\b/ig;
+
+                    // السجلات
+                    const registers = /\b(A|B|C|D|E|H|L|SP|PC|PSW|M)\b/g;
+
+                    // --- التعديل هنا (الأرقام) ---
+                    // الشرط الجديد: يجب أن يبدأ الرقم بـ 0-9 أو ينتهي بـ H 
+                    // هذا يمنع اعتبار كلمات مثل ADD أو DAD كأرقام
+                    const hex = /\b([0-9][0-9A-F]*H?|[0-9A-F]+H)\b/ig;
+
+                    return code.split('\n').map(line => {
+                        let [codePart, ...commentParts] = line.split(';');
+                        let comment = commentParts.join(';');
+
+                        if (codePart) {
+                            // الترتيب مهم: نلون الأوامر أولاً لحمايتها
+                            codePart = codePart
+                                .replace(instructions, '<span class="asm-cmd">$1</span>')
+                                .replace(hex, '<span class="asm-num">$1</span>') // الأرقام بعد الأوامر
+                                .replace(registers, '<span class="asm-reg">$1</span>');
+                        }
+
+                        if (comment !== undefined) {
+                            return `${codePart}<span class="asm-comment">;${comment}</span>`;
+                        }
+                        return codePart;
+                    }).join('\n');
+                };
+                // --- DATA STORE ---
+                const chapterData = ref([
+                    {
+                        title_en: "I. Internal Architecture",
+                        title_ar: "المعمارية الداخلية",
+                        desc_en: "These units manage the processing and flow of data (The Brain & Heart).",
+                        desc_ar: "هذه الوحدات هي المسؤولة عن إدارة معالجة وتدفق البيانات (العقل والقلب).",
+                        colorClass: "bg-purple-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "1. Control Unit",
+                                text_en: "Acts as the <b>brain</b>. Generates signals to execute decoded instructions.<br>Function: Causes specific connections to <b>open or close</b>.",
+                                text_ar: "تعمل بمثابة <b>العقل</b>. تولد إشارات لتنفيذ التعليمات.<br>الوظيفة: فتح أو إغلاق اتصالات محددة لتوجيه البيانات."
+                            },
+                            {
+                                type: "list",
+                                head_en: "2. ALU (Arithmetic Logic Unit)",
+                                badge: "Exam Point",
+                                text_en: "Performs Math (Add, Sub) & Logic (AND, OR).<br><b>Crucial:</b> Uses data from Accumulator but <b>always stores result</b> back in Accumulator.",
+                                text_ar: "تقوم بالعمليات الحسابية والمنطقية.<br><b>مهم للامتحان:</b> تستخدم البيانات من المركم، ودائماً تخزن النتيجة النهائية في المركم."
+                            },
+                            {
+                                type: "list",
+                                head_en: "3. Instruction Register & Decoder",
+                                text_en: "<b>Register:</b> Temporary store for fetched instruction.<br><b>Decoder:</b> Interprets the instruction.",
+                                text_ar: "<b>المسجل:</b> مخزن مؤقت للتعليمة المجلوبة.<br><b>المفكك:</b> يترجم (يفك تشفير) التعليمة."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "II. Registers (Programming Model)",
+                        title_ar: "نموذج البرمجة (السجلات)",
+                        desc_en: "You must know the size (bits) and function of each register.",
+                        desc_ar: "يجب معرفة حجم ووظيفة كل سجل.",
+                        colorClass: "bg-blue-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "Accumulator (Reg A)",
+                                text_en: "8-bit register. Part of ALU. Stores data and operation results.",
+                                text_ar: "سجل 8-بت. جزء من الـ ALU. يخزن البيانات والنتائج."
+                            },
+                            {
+                                type: "list",
+                                head_en: "General-Purpose Registers",
+                                text_en: "B, C, D, E, H, L (8-bit).<br>Pairs (16-bit): BC, DE, HL.<br><b>Note:</b> HL is the Memory Pointer.",
+                                text_ar: "سجلات 8-بت (B,C,D,E,H,L).<br>أزواج 16-بت: BC, DE, HL.<br>ملاحظة: HL هو مؤشر الذاكرة."
+                            },
+                            {
+                                type: "list",
+                                head_en: "Flag Register",
+                                text_en: "5 Flip-flops based on Accumulator result:<br>Sign (S), Zero (Z), Aux Carry (AC), Parity (P), Carry (CY).",
+                                text_ar: "5 رايات (Flip-flops) تعتمد على نتيجة المركم:<br>الإشارة، الصفر، الحمل المساعد، التماثل، الحمل."
+                            },
+                            {
+                                type: "list",
+                                head_en: "16-bit Pointers",
+                                text_en: "<b>PC (Program Counter):</b> Address of <u>next byte</u> to fetch.<br><b>SP (Stack Pointer):</b> Points to top of stack.",
+                                text_ar: "<b>عداد البرنامج (PC):</b> عنوان البايت التالي.<br><b>مؤشر المكدس (SP):</b> يشير لقمة المكدس."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "III. System Bus",
+                        title_ar: "نواقل النظام",
+                        desc_en: "Memorize the width and direction (The Nerves).",
+                        desc_ar: "احفظ عرض واتجاه النواقل (الأعصاب).",
+                        colorClass: "bg-emerald-500",
+                        items: [
+                            {
+                                type: "table",
+                                rows: [
+                                    {
+                                        name_en: "Address Bus", name_ar: "ناقل العناوين",
+                                        width: "16-bit",
+                                        dir_en: "Unidirectional", dir_ar: "اتجاه واحد",
+                                        func_en: "Identifies locations (2<sup>16</sup> addresses).", func_ar: "يحدد المواقع (2 أس 16 عنوان)."
+                                    },
+                                    {
+                                        name_en: "Data Bus", name_ar: "ناقل البيانات",
+                                        width: "8-bit",
+                                        dir_en: "Bi-directional", dir_ar: "ثنائي الاتجاه",
+                                        func_en: "Carries data & instructions.", func_ar: "ينقل البيانات والتعليمات."
+                                    },
+                                    {
+                                        name_en: "Control Bus", name_ar: "ناقل التحكم",
+                                        width: "~10 lines",
+                                        dir_en: "Mixed", dir_ar: "مختلط",
+                                        func_en: "Signals: Read, Write, Interrupts.", func_ar: "إشارات: قراءة، كتابة، مقاطعة."
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "IV. Addressing Modes",
+                        title_ar: "أنماط العنونة",
+                        desc_en: "How the processor finds operands.",
+                        desc_ar: "كيف يجد المعالج المعاملات.",
+                        colorClass: "bg-orange-500",
+                        items: [
+                            { type: "list", head_en: "1. Immediate", text_en: "Data inside instruction (<code>MVI R, data</code>).", text_ar: "البيانات داخل التعليمة." },
+                            { type: "list", head_en: "2. Register", text_en: "Data in registers (<code>MOV Rd, Rs</code>).", text_ar: "البيانات في السجلات." },
+                            { type: "list", head_en: "3. Direct", text_en: "Address specified directly (<code>IN 00H</code>).", text_ar: "العنوان محدد مباشرة." },
+                            { type: "list", head_en: "4. Indirect", text_en: "Calculates Effective Address (Pointer based).", text_ar: "يحسب العنوان الفعال (مبني على المؤشر)." }
+                        ]
+                    },
+                    {
+                        title_en: "VI. Instruction Format",
+                        title_ar: "صيغة التعليمة",
+                        desc_en: "Classified by word size (length in bytes).",
+                        desc_ar: "تصنف حسب طول الكلمة بالبايت.",
+                        colorClass: "bg-indigo-500",
+                        items: [
+                            { type: "list", head_en: "1-Byte", text_en: "Opcode + Operand (<code>MOV C,A</code>).", text_ar: "الكود والمعامل معاً." },
+                            { type: "list", head_en: "2-Byte", text_en: "Opcode + 8-bit Data (<code>MVI A, 32H</code>).", text_ar: "الكود + بيانات 8-بت." },
+                            { type: "list", head_en: "3-Byte", text_en: "Opcode + 16-bit Address (<code>JMP 2085H</code>).", text_ar: "الكود + عنوان 16-بت." }
+                        ]
+                    },
+                    {
+                        title_en: "VII. Sample Program",
+                        title_ar: "برنامج مثال",
+                        desc_en: "A simple program to add two numbers.",
+                        desc_ar: "برنامج بسيط لجمع رقمين.",
+                        colorClass: "bg-slate-500",
+                        items: [
+                            {
+                                type: "code",
+                                code: `MVI D, 8BH   ; Load 8BH into Register D
+MVI C, 6FH   ; Load 6FH into Register C
+MOV A, C     ; Copy C to Accumulator (Setup)
+ADD D        ; Add D to A. Result in A
+OUT PORT1    ; Send result to Port 1
+HLT          ; Stop execution`
+                            }
+                        ]
+                    }
+                ]);
+
+                return { showArabic, toggleLanguage, chapterData, highlightASM };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>

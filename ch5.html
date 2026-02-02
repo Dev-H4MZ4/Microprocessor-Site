@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 5: Assembly Language | Microprocessor 8085</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { background-color: #f8fafc; }
+        
+        /* Fonts */
+        .font-en { font-family: 'Inter', sans-serif; }
+        .font-ar { font-family: 'Cairo', sans-serif; }
+        .font-code { font-family: 'Fira Code', monospace; }
+
+        /* RTL Fixes */
+        .is-rtl {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+        .is-rtl code, 
+        .is-rtl .en-term {
+            direction: ltr;
+            unicode-bidi: isolate; 
+            font-family: 'Fira Code', monospace;
+            background-color: #f1f5f9;
+            padding: 0 4px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            display: inline-block; 
+        }
+        .is-rtl ul { padding-right: 1.5rem; padding-left: 0; }
+
+        /* Code Window */
+        .code-window {
+            background: #1e1e2e;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            border: 1px solid #313244;
+            overflow: hidden;
+            direction: ltr;
+            text-align: left;
+        }
+        .window-header {
+            background: #181825;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #313244;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+
+        /* Syntax Highlighting */
+        .asm-cmd { color: #cba6f7; font-weight: bold; } 
+        .asm-dir { color: #f38ba8; font-weight: bold; font-style: italic; } 
+        .asm-reg { color: #89b4fa; font-weight: bold; }
+        .asm-num { color: #fab387; }
+        .asm-str { color: #a6e3a1; } 
+        .asm-comment { color: #6c7086; font-style: italic; }
+        .asm-label { color: #94e2d5; font-weight: bold; }
+
+        [v-cloak] { display: none; }
+    </style>
+</head>
+
+<body class="antialiased text-slate-800">
+
+    <div id="app" v-cloak class="min-h-screen flex flex-col">
+
+        <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-en font-bold text-sm">
+                    <i class="ph-bold ph-arrow-left text-lg"></i>
+                    <span class="hidden md:inline">Back to Home</span>
+                </a>
+                
+                <div class="absolute left-1/2 transform -translate-x-1/2 text-center">
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-widest font-en">Chapter 5</span>
+                    <h1 class="font-en font-bold text-slate-800 text-sm md:text-base">Assembly Language</h1>
+                </div>
+
+                <button @click="toggleLanguage"
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-xs font-bold font-en"
+                    :class="showArabic ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'">
+                    <i class="ph-fill ph-translate text-lg"></i>
+                    <span>{{ showArabic ? 'AR : ON' : 'AR : OFF' }}</span>
+                </button>
+            </div>
+        </nav>
+
+        <header class="bg-slate-900 text-white py-12 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-purple-900/50 to-indigo-900/50"></div>
+            <div class="container mx-auto px-4 relative z-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-en mb-4">
+                    <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+                    Assembler & Syntax
+                </div>
+                <h1 class="text-3xl md:text-5xl font-en font-black mb-4">Assembly Language</h1>
+                
+                <div class="max-w-xl mx-auto min-h-[3rem]">
+                    <p v-if="showArabic" class="font-ar text-slate-300 text-lg md:text-xl is-rtl">
+                        المجمع (Assembler)، التوجيهات (Directives)، وقواعد كتابة الكود (بالتفصيل الكامل).
+                    </p>
+                    <p v-else class="font-en text-slate-400 text-sm md:text-base">
+                        The Two-Pass Assembler, Directives (Pseudo-Ops), and Instruction Format (Comprehensive Review).
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 py-12 max-w-4xl space-y-12">
+
+            <section v-for="(section, index) in chapterData" :key="index" class="scroll-mt-24">
+                
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 mb-6 border-b border-slate-200 pb-2">
+                    <h2 class="text-2xl font-en font-bold text-slate-800">{{ section.title_en }}</h2>
+                    <span v-if="showArabic" class="text-lg font-ar text-blue-600 is-rtl w-full md:w-auto md:ml-auto">
+                        {{ section.title_ar }}
+                    </span>
+                </div>
+
+                <div class="mb-6 space-y-2" v-if="section.desc_en">
+                    <p class="font-en text-slate-600 leading-relaxed" v-html="section.desc_en"></p>
+                    <div v-if="showArabic" class="is-rtl bg-blue-50/50 p-3 rounded-lg border-r-4 border-blue-400">
+                        <p class="font-ar text-slate-600 text-sm leading-relaxed" v-html="section.desc_ar"></p>
+                    </div>
+                </div>
+
+                <div class="grid gap-6">
+                    <div v-for="(item, idx) in section.items" :key="idx"
+                        class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden">
+
+                        <div class="absolute left-0 top-0 h-full w-1" :class="section.colorClass"></div>
+
+                        <div v-if="item.type === 'list'">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-en font-bold text-lg text-slate-800" v-html="item.head_en"></h3>
+                                <span v-if="item.badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-700 font-en border border-indigo-200">
+                                    {{ item.badge }}
+                                </span>
+                            </div>
+                            <div class="grid gap-3">
+                                <div class="font-en text-slate-600 text-sm leading-relaxed pl-2 border-l border-slate-200">
+                                    <span v-html="item.text_en"></span>
+                                </div>
+                                <div v-if="showArabic" class="is-rtl font-ar text-slate-600 text-sm leading-relaxed pr-2 border-r border-blue-200">
+                                    <span v-html="item.text_ar"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'table'" class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-en text-slate-500">
+                                        <th v-for="h in item.headers" class="p-3">{{ h }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm font-en">
+                                    <tr v-for="row in item.rows" class="border-b border-slate-50 hover:bg-slate-50/50">
+                                        <td v-for="cell in row" class="p-3 text-slate-700 font-medium" v-html="cell"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div v-if="item.type === 'code'" class="dir-ltr">
+                            <div class="code-window">
+                                <div class="window-header">
+                                    <div class="flex gap-1.5">
+                                        <div class="dot bg-red-400"></div>
+                                        <div class="dot bg-yellow-400"></div>
+                                        <div class="dot bg-green-400"></div>
+                                    </div>
+                                    <div class="ml-auto text-[10px] font-code text-slate-500 uppercase opacity-60">ASM Source</div>
+                                </div>
+                                <pre class="m-0 bg-[#1e1e2e] p-5 overflow-x-auto"><code class="font-code text-sm !bg-transparent p-0 text-slate-200 block" v-html="highlightASM(item.code)"></code></pre>
+                            </div>
+                            <div class="mt-4 border-t border-slate-100 pt-3">
+                                <h4 class="font-en font-bold text-xs text-slate-500 uppercase mb-2">Analysis:</h4>
+                                <div class="font-en text-sm text-slate-600 mb-3" v-html="item.exp_en"></div>
+                                <div v-if="showArabic" class="is-rtl font-ar text-sm text-blue-800 bg-blue-50 p-3 rounded border-r-2 border-blue-400">
+                                    <span v-html="item.exp_ar"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'tip'" class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                            <h3 class="font-en font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                <i class="ph-fill ph-lightbulb"></i> {{ item.head_en }}
+                            </h3>
+                            <div class="space-y-2">
+                                <p class="font-en text-sm text-amber-900" v-html="item.text_en"></p>
+                                <p v-if="showArabic" class="is-rtl font-ar text-sm text-amber-900 border-r-2 border-amber-400 pr-2" v-html="item.text_ar"></p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="py-8 text-center text-slate-400 text-xs font-en border-t border-slate-200">
+            <p>IT Engineering - 2026 | 8085 Microprocessor Course</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+
+        createApp({
+            setup() {
+                const showArabic = ref(true);
+                const toggleLanguage = () => showArabic.value = !showArabic.value;
+
+                // --- Improved Syntax Highlighter (With Directives) ---
+                const highlightASM = (code) => {
+                    if (!code) return '';
+                    
+                    const instructions = /\b(MOV|MVI|LDA|STA|LHLD|SHLD|LXI|LDAX|STAX|XCHG|ADD|ADI|SUB|SUI|INR|DCR|INX|DCX|DAD|JMP|JZ|JNZ|CALL|RET|HLT)\b/ig;
+                    // Directives Added:
+                    const directives = /\b(ORG|DB|DW|DS|EQU)\b/ig;
+                    const registers = /\b(A|B|C|D|E|H|L|SP|PC|PSW|M)\b/g;
+                    const hex = /\b([0-9][0-9A-F]*H?|[0-9A-F]+H)\b/ig;
+                    const stringVal = /('.*?')/g; // Catch 'A' or 'AB'
+                    const label = /\b([A-Z0-9_]+:)/ig;
+
+                    return code.split('\n').map(line => {
+                        let [codePart, ...commentParts] = line.split(';');
+                        let comment = commentParts.join(';');
+
+                        if (codePart) {
+                            codePart = codePart
+                                .replace(label, '<span class="asm-label">$1</span>')
+                                .replace(directives, '<span class="asm-dir">$1</span>') // Pink color for ORG, DB
+                                .replace(instructions, '<span class="asm-cmd">$1</span>')
+                                .replace(hex, '<span class="asm-num">$1</span>')
+                                .replace(stringVal, '<span class="asm-str">$1</span>') // Green string
+                                .replace(registers, '<span class="asm-reg">$1</span>');
+                        }
+                        if (comment !== undefined && comment !== "") return `${codePart}<span class="asm-comment">;${comment}</span>`;
+                        return codePart;
+                    }).join('\n');
+                };
+
+                // --- DATA STORE ---
+                const chapterData = ref([
+                    {
+                        title_en: "1. Core Definitions",
+                        title_ar: "تعريفات أساسية (مفاهيم جوهرية)",
+                        desc_en: "Fundamental concepts of Assembly programming.",
+                        desc_ar: "المفاهيم الأساسية التي يقوم عليها المجمع ولغة الآلة.",
+                        colorClass: "bg-indigo-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "Assembly Language vs. Machine Code",
+                                text_en: "• <b>Assembly Language:</b> A symbolic programming language. Used because programming directly in hex is difficult and error-prone.<br>• <b>Assembler:</b> A program that converts the <b>Source Program</b> (symbolic) into the <b>Object Program</b> (hex/machine code).<br>• <b>Source:</b> The code you write (e.g., <code>MVI A, 1</code>).<br>• <b>Object:</b> The machine code the processor understands (e.g., <code>3E 01</code>).",
+                                text_ar: "• <b>لغة التجميع (Assembly):</b> لغة رمزية تستخدم لأن البرمجة مباشرة بالهيكس صعبة جداً.<br>• <b>المجمع (Assembler):</b> برنامج يحول <b>الكود المصدري</b> (الرمزي) إلى <b>كود الهدف</b> (لغة الآلة).<br>• <b>Source:</b> الكود الذي تكتبه أنت.<br>• <b>Object:</b> الكود الذي يفهمه المعالج."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "2. The Two-Pass Assembler",
+                        title_ar: "المجمع ذو المرحلتين (Two-Pass Assembler)",
+                        desc_en: "A critical concept. You must understand what happens in each pass to allow forward referencing.",
+                        desc_ar: "مفهوم جوهري. يجب فهم ما يحدث في كل مرحلة للسماح بالعنونة الأمامية (Forward Addressing).",
+                        colorClass: "bg-blue-600",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "Pass One: Generating the Label Table",
+                                text_en: "<b>Goal:</b> Generate a <b>Label Table</b>.<br><b>Process:</b><br>1. Scans the source program.<br>2. Updates an internal Program Counter to determine the length/address of each instruction.<br>3. Records every label and its corresponding memory address.<br><b>Key Feature:</b> Allows <b>forward addressing</b> (jumping to instructions appearing later).",
+                                text_ar: "<b>الهدف:</b> إنشاء <b>جدول العناوين (Label Table)</b>.<br><b>العملية:</b><br>1. يمسح البرنامج المصدري.<br>2. يحدث عداداً داخلياً لحساب طول وعنوان كل تعليمة.<br>3. يسجل كل عنوان رمزي (Label) وما يقابله من عنوان ذاكرة حقيقي.<br><b>الميزة:</b> يسمح بالقفز لأسطر لم تأتِ بعد (Forward Addressing)."
+                            },
+                            {
+                                type: "list",
+                                head_en: "Pass Two: Generating Object Code",
+                                text_en: "<b>Goal:</b> Generate the <b>Object Program</b> (Machine Code).<br><b>Process:</b><br>1. Converts opcodes and operands into hexadecimal.<br>2. Uses the <b>Label Table</b> (from Pass 1) to resolve addresses for jumps/calls.<br>3. Uses the Instruction Table (containing opcodes).",
+                                text_ar: "<b>الهدف:</b> إنشاء <b>برنامج الهدف</b> (كود الآلة).<br><b>العملية:</b><br>1. يحول الأكواد والمعاملات إلى هيكس.<br>2. يستخدم <b>جدول العناوين</b> (من المرحلة 1) لاستبدال الرموز بعناوين حقيقية.<br>3. يستخدم جدول التعليمات للحصول على أكواد العمليات (Opcodes)."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "3. Instruction Format & Syntax",
+                        title_ar: "صيغة التعليمة وقواعد الكتابة",
+                        desc_en: "Format: <code>LABEL OPCODE OPERAND COMMENT</code>",
+                        desc_ar: "الصيغة العامة: <code>LABEL OPCODE OPERAND COMMENT</code>",
+                        colorClass: "bg-teal-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "A. Label Rules (Crucial)",
+                                text_en: "1. Must begin with a letter (A-Z).<br>2. Can contain alphanumeric characters.<br>3. Usually ends with a colon (<code>:</code>).<br>4. <b>Cannot</b> be a register name (e.g., <code>D:</code>) or opcode.<br>5. <b>Cannot</b> start with a number.<br>6. Special chars (like <code>.</code>) are invalid, but underscores (<code>_</code>) are often valid.",
+                                text_ar: "<b>قواعد العناوين (Labels):</b><br>1. يجب أن تبدأ بحرف.<br>2. تحتوي حروف وأرقام.<br>3. تنتهي عادة بنقطتين <code>:</code>.<br>4. <b>لا يمكن</b> أن تكون اسم سجل أو أمر (مثل <code>MOV:</code>).<br>5. <b>لا يمكن</b> أن تبدأ برقم.<br>6. الرموز الخاصة ممنوعة (مثل النقطة) لكن الشرطة السفلية <code>_</code> مسموحة."
+                            },
+                            {
+                                type: "list",
+                                head_en: "B. Operands & C. Comments",
+                                text_en: "<b>Operands:</b> Register, Data, or Label. <br>Hex ends in H (<code>0ABH</code>), Binary in B. ASCII in quotes (<code>'A'</code>).<br><b>Comments:</b> Begin with <code>;</code> or <code>*</code>. Assembler ignores line after comment.",
+                                text_ar: "<b>المعاملات:</b> سجلات، بيانات، أو عناوين. الهيكس ينتهي بـ H، والثنائي بـ B.<br><b>التعليقات:</b> تبدأ بفاصلة منقوطة <code>;</code> ويتجاهلها المجمع تماماً."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "4. Assembler Directives (Pseudo-Ops)",
+                        title_ar: "توجيهات المجمع (أوامر وهمية)",
+                        desc_en: "Instructions for the <b>Assembler</b>, NOT the CPU. They do not generate opcodes.",
+                        desc_ar: "هي تعليمات موجهة لبرنامج المجمع (Assembler) لتنظيم الذاكرة، ولا ينفذها المعالج.",
+                        colorClass: "bg-purple-600",
+                        items: [
+                            {
+                                type: "table",
+                                headers: ["Directive", "Function", "Details"],
+                                rows: [
+                                    ["<code>ORG</code>", "Origin", "Sets starting address of program. Can be used anywhere."],
+                                    ["<code>DB</code>", "Define Byte", "Defines 8-bit data/string. Can use commas (<code>DB 1,2</code>)."],
+                                    ["<code>DW</code>", "Define Word", "Defines 16-bit data. <b>Stored in Little Endian</b> (Low byte first)."],
+                                    ["<code>DS</code>", "Define Storage", "Reserves memory space (variables) but does <b>not</b> fill it."],
+                                    ["<code>EQU</code>", "Equate", "Assigns constant value to label (e.g., <code>ONE EQU 1</code>)."]
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "5. Solved Examples (Complex Parts)",
+                        title_ar: "أمثلة محلولة (الأجزاء المعقدة)",
+                        colorClass: "bg-emerald-500",
+                        items: [
+                            {
+                                type: "table",
+                                headers: ["Label Attempt", "Status", "Reason"],
+                                rows: [
+                                    ["<code>START:</code>", "Valid", "Starts with letter."],
+                                    ["<code>2GO:</code>", "<b>Invalid</b>", "Starts with a number."],
+                                    ["<code>MOV:</code>", "<b>Invalid</b>", "It is an Opcode."],
+                                    ["<code>USER_NAME:</code>", "Valid", "Underscore allowed."],
+                                    ["<code>END.P:</code>", "<b>Invalid</b>", "Special char (.) not allowed."]
+                                ]
+                            },
+                            {
+                                type: "code",
+                                code: `        ORG  1000H    ; Start at 1000H
+START:  MVI  A, 5     ; 2-Bytes (1000, 1001)
+        MOV  B, A     ; 1-Byte (1002)
+DATA1:  DB   1, 2     ; 2-Bytes (1003, 1004)
+DATA2:  DW   AAAAH    ; 2-Bytes (1005, 1006)`,
+                                exp_en: "<b>Memory Address Calculation:</b><br>• <code>MVI</code> is 2 bytes -> next is 1002.<br>• <code>MOV</code> is 1 byte -> next is 1003.<br>• <code>DATA1</code> starts at 1003 (stores 01) and 1004 (stores 02).<br>• <code>DATA2</code> starts at 1005.",
+                                exp_ar: "<b>حساب العناوين (Pass 1):</b><br>• <code>MVI</code> بايتين (التعليمة التالية عند 1002).<br>• <code>MOV</code> بايت واحد (التعليمة التالية عند 1003).<br>• <code>DATA1</code> يبدأ عند 1003 (يخزن 01) و 1004 (يخزن 02).<br>• إذن <code>DATA2</code> يبدأ عند 1005."
+                            },
+                            {
+                                type: "code",
+                                code: `        ORG 0000H
+VAL1:   DB  10        ; 0A H (Decimal to Hex)
+VAL2:   DB  'AB'      ; 41H, 42H (ASCII)
+VAL3:   DB  10+5      ; 0F H (Math: 15 -> F)
+VAL4:   DW  1234H     ; 34H, 12H (Little Endian)`,
+                                exp_en: "<b>Data Definition & Hex Conversion:</b><br>• Decimal 10 = <code>0A</code>.<br>• 'A'=41H, 'B'=42H.<br>• 10+5=15=0FH.<br>• <b>CRITICAL:</b> <code>DW 1234H</code> stores Low Byte (34) first, then High Byte (12).",
+                                exp_ar: "<b>تحويل البيانات والهيكس:</b><br>• 10 عشري = <code>0A</code> هيكس.<br>• النصوص تخزن كود ASCII.<br>• يسمح بالعمليات الحسابية (10+5).<br>• <b>مهم جداً:</b> <code>DW</code> يطبق Little Endian (يخزن 34 أولاً في العنوان الأقل، ثم 12)."
+                            },
+                            {
+                                type: "code",
+                                code: `       ORG 2000H
+BUFF:  DS  5       ; Reserve 5 bytes (2000-2004)
+NEXT:  MVI A, 1    ; Where does this start?`,
+                                exp_en: "<b>Using DS (Define Storage):</b><br>• BUFF starts at 2000H.<br>• <code>DS 5</code> reserves 5 bytes (2000, 2001, 2002, 2003, 2004).<br>• Therefore, <code>NEXT</code> begins at <b>2005H</b>.",
+                                exp_ar: "<b>استخدام DS:</b><br>تم حجز 5 بايتات (من 2000 إلى 2004).<br>إذن العنوان التالي <code>NEXT</code> سيبدأ حتماً من <b>2005H</b>."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Exam Checklist",
+                        title_ar: "نقاط مهمة للامتحان",
+                        colorClass: "bg-slate-500",
+                        items: [
+                            { type: "list", head_en: "Directives", text_en: "Don't confuse <code>DB</code> (8-bit) with <code>DW</code> (16-bit).", text_ar: "فرق بين <code>DB</code> (للبيانات 8 بت) و <code>DW</code> (للبيانات 16 بت)." },
+                            { type: "list", head_en: "Pass 1 vs 2", text_en: "Pass 1 = Label Table. Pass 2 = Object Code.", text_ar: "المرحلة الأولى تنشئ جدول العناوين. المرحلة الثانية تنشئ كود الآلة." },
+                            { type: "list", head_en: "Math in Assembler", text_en: "Assembler can calculate <code>10*10</code> or <code>'B'-20H</code>.", text_ar: "المجمع يستطيع إجراء عمليات حسابية أثناء الترجمة." }
+                        ]
+                    }
+                ]);
+
+                return { showArabic, toggleLanguage, chapterData, highlightASM };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>

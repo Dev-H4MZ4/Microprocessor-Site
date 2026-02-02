@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 2: Data Transfer | Microprocessor 8085</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { background-color: #f8fafc; }
+        .font-en { font-family: 'Inter', sans-serif; }
+        .font-ar { font-family: 'Cairo', sans-serif; }
+        .font-code { font-family: 'Fira Code', monospace; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        /* Mac Code Window Style */
+        .code-window {
+            background: #1e1e2e;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+            border: 1px solid #313244;
+            overflow: hidden;
+            direction: ltr; /* Code must always be LTR */
+            text-align: left;
+        }
+        .window-header {
+            background: #181825;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #313244;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+        
+        /* Syntax Highlighting Colors */
+        .asm-cmd { color: #cba6f7; font-weight: bold; }
+        .asm-reg { color: #89b4fa; font-weight: bold; }
+        .asm-num { color: #fab387; }
+        .asm-comment { color: #6c7086; font-style: italic; }
+        .asm-label { color: #a6e3a1; font-weight: bold; }
+    </style>
+</head>
+<body class="antialiased text-slate-800">
+
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-en font-bold text-sm">
+                    <i class="ph-bold ph-arrow-left text-lg"></i>
+                    <span class="hidden md:inline">Back to Home</span>
+                </a>
+                <div class="absolute left-1/2 transform -translate-x-1/2 text-center">
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-widest font-en">Chapter 2</span>
+                    <h1 class="font-en font-bold text-slate-800 text-sm md:text-base">Data Transfer</h1>
+                </div>
+                <button @click="toggleLanguage" 
+                        class="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-xs font-bold font-en"
+                        :class="showArabic ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'">
+                    <i class="ph-fill ph-translate text-lg"></i>
+                    <span>{{ showArabic ? 'AR : ON' : 'AR : OFF' }}</span>
+                </button>
+            </div>
+        </nav>
+
+        <header class="bg-slate-900 text-white py-12 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-900/50 to-blue-900/50"></div>
+            <div class="container mx-auto px-4 relative z-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-en mb-4">
+                    <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                    Instruction Set
+                </div>
+                <h1 class="text-3xl md:text-5xl font-en font-black mb-4">Data Transfer Instructions</h1>
+                
+                <transition name="fade">
+                    <p v-if="showArabic" class="font-ar text-slate-300 text-lg md:text-xl leading-relaxed" dir="rtl">
+                        القواعد الذهبية، أنواع العنونة، وكيفية كتابة برامج النقل.
+                    </p>
+                    <p v-else class="font-en text-slate-400 text-sm md:text-base max-w-xl mx-auto">
+                        The Golden Rules, Addressing Modes, and Block Transfer Programming Logic.
+                    </p>
+                </transition>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 py-12 max-w-4xl space-y-12">
+
+            <section v-for="(section, index) in chapterData" :key="index" class="scroll-mt-24">
+                
+                <div class="flex items-baseline gap-4 mb-6 border-b border-slate-200 pb-2 flex-wrap">
+                    <h2 class="text-2xl font-en font-bold text-slate-800">{{ section.title_en }}</h2>
+                    <span v-if="showArabic" class="text-lg font-ar text-blue-600 w-full md:w-auto text-right md:ml-auto" dir="rtl">
+                        {{ section.title_ar }}
+                    </span>
+                </div>
+
+                <div class="grid gap-6">
+                    <div v-for="(item, idx) in section.items" :key="idx" 
+                         class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden">
+                        
+                        <div class="absolute left-0 top-0 h-full w-1" :class="section.colorClass"></div>
+
+                        <div v-if="item.type === 'list'">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-en font-bold text-lg text-slate-800">{{ item.head_en }}</h3>
+                                <span v-if="item.badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 font-en">
+                                    {{ item.badge }}
+                                </span>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="font-en text-slate-600 text-sm leading-relaxed pl-2 border-l border-slate-200">
+                                    <span v-html="item.text_en"></span>
+                                </div>
+                                <div v-if="showArabic" class="font-ar text-slate-500 text-sm leading-relaxed border-r border-blue-200 pr-2 text-right" dir="rtl">
+                                    <span v-html="item.text_ar"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'code'" class="dir-ltr">
+                             <div class="code-window">
+                                <div class="window-header">
+                                    <div class="flex gap-1.5">
+                                        <div class="dot bg-red-400"></div>
+                                        <div class="dot bg-yellow-400"></div>
+                                        <div class="dot bg-green-400"></div>
+                                    </div>
+                                    <div class="ml-auto text-[10px] font-code text-slate-500 uppercase opacity-60">ASM 8085</div>
+                                </div>
+                                <pre class="m-0 bg-[#1e1e2e] p-5 overflow-x-auto"><code class="font-code text-sm !bg-transparent p-0 text-slate-200" v-html="highlightASM(item.code)"></code></pre>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <p class="font-en text-xs text-slate-400 mb-1">{{ item.caption_en }}</p>
+                                <p v-if="showArabic" class="font-ar text-sm text-blue-600" dir="rtl">{{ item.caption_ar }}</p>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'table'" class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-en text-slate-500">
+                                        <th v-for="h in item.headers" class="p-3">{{ h }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm font-en">
+                                    <tr v-for="row in item.rows" class="border-b border-slate-50 hover:bg-slate-50/50">
+                                        <td v-for="cell in row" class="p-3 text-slate-700 font-medium" v-html="cell"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div v-if="item.type === 'tip'" class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                            <h3 class="font-en font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                <i class="ph-fill ph-lightbulb"></i> {{ item.head_en }}
+                            </h3>
+                            <p class="font-en text-sm text-amber-900 mb-2">{{ item.text_en }}</p>
+                            <p v-if="showArabic" class="font-ar text-sm text-amber-800 border-r-2 border-amber-400 pr-2 text-right" dir="rtl">{{ item.text_ar }}</p>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="py-8 text-center text-slate-400 text-xs font-en border-t border-slate-200">
+            <p>IT Engineering - 2026</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+
+        createApp({
+            setup() {
+                const showArabic = ref(true);
+                const toggleLanguage = () => showArabic.value = !showArabic.value;
+
+                // --- Improved Manual Syntax Highlighter ---
+                const highlightASM = (code) => {
+                    if (!code) return '';
+                    
+                    // Regex Patterns
+                    const instructions = /\b(MOV|MVI|LDA|STA|LHLD|SHLD|LXI|LDAX|STAX|XCHG|ADD|ADI|ADC|ACI|SUB|SUI|SBB|SBI|INR|DCR|INX|DCX|DAD|DAA|ANA|ANI|XRA|XRI|ORA|ORI|CMP|CPI|RLC|RRC|RAL|RAR|CMA|CMC|STC|JMP|JC|JNC|JZ|JNZ|JP|JM|JPE|JPO|CALL|CC|CNC|CZ|CNZ|CP|CM|CPE|CPO|RET|RC|RNC|RZ|RNZ|RP|RM|RPE|RPO|PCHL|RST|PUSH|POP|XTHL|SPHL|IN|OUT|EI|DI|HLT|NOP)\b/ig;
+                    const registers = /\b(A|B|C|D|E|H|L|SP|PC|PSW|M)\b/g;
+                    // Smart Hex: Starts with 0-9 OR ends with H
+                    const hex = /\b([0-9][0-9A-F]*H?|[0-9A-F]+H)\b/ig; 
+                    const label = /\b([A-Z0-9_]+:)/ig; // Labels ending with :
+
+                    return code.split('\n').map(line => {
+                        let [codePart, ...commentParts] = line.split(';');
+                        let comment = commentParts.join(';');
+
+                        if (codePart) {
+                            codePart = codePart
+                                .replace(label, '<span class="asm-label">$1</span>') // LOOP:
+                                .replace(instructions, '<span class="asm-cmd">$1</span>')
+                                .replace(hex, '<span class="asm-num">$1</span>')
+                                .replace(registers, '<span class="asm-reg">$1</span>');
+                        }
+
+                        if (comment !== undefined) {
+                            return `${codePart}<span class="asm-comment">;${comment}</span>`;
+                        }
+                        return codePart;
+                    }).join('\n');
+                };
+
+                // --- DATA ---
+                const chapterData = ref([
+                    {
+                        title_en: "Part 1: The Golden Rules",
+                        title_ar: "القواعد الذهبية لنقل البيانات",
+                        colorClass: "bg-yellow-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "1. Copy, Don't Move",
+                                text_en: "Data transfer instructions <b>copy</b> data. The source is <b>NOT</b> modified.",
+                                text_ar: "تعليمات النقل تقوم <b>بنسخ</b> البيانات. المصدر <b>لا</b> يتم تعديله (يبقى كما هو)."
+                            },
+                            {
+                                type: "list",
+                                head_en: "2. The 'No-Change' Rule",
+                                text_en: "Only the <b>destination</b> data is replaced. Source remains safe.",
+                                text_ar: "قاعدة 'عدم التغيير': يتم استبدال بيانات <b>الوجهة</b> فقط."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Part 2: The Five Categories",
+                        title_ar: "الأنواع الخمسة للتعليمات",
+                        colorClass: "bg-blue-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "1. Immediate Addressing",
+                                text_en: "Data is <b>inside</b> the code.<br>• 8-bit: <code>MVI B, 37H</code><br>• 16-bit: <code>LXI H, 1000H</code>",
+                                text_ar: "البيانات موجودة <b>داخل</b> الكود نفسه.<br>• لـ 8-بت نستخدم MVI.<br>• لـ 16-بت نستخدم LXI."
+                            },
+                            {
+                                type: "list",
+                                head_en: "2. Register Addressing",
+                                text_en: "Move data between registers: <code>MOV Rd, Rs</code>.<br><b>Important:</b> If you see <b>M</b>, it means Memory pointed by HL.",
+                                text_ar: "نقل البيانات بين السجلات.<br><b>مهم:</b> الحرف <b>M</b> يعني موقع الذاكرة الذي يشير إليه الزوج HL."
+                            },
+                            {
+                                type: "list",
+                                head_en: "3. Direct Addressing",
+                                text_en: "Talk to specific address.<br>• <code>LDA a16</code> / <code>STA a16</code> for Accumulator.",
+                                text_ar: "التعامل مع عنوان محدد مباشرة.<br>• نستخدم LDA للتحميل و STA للتخزين في المركم."
+                            },
+                            {
+                                type: "list",
+                                head_en: "4. Indirect Addressing (Pointers)",
+                                text_en: "Use BC, DE, or HL as pointers.<br>• <code>LDAX B</code> (Load A from addr in BC).<br>• <code>MOV B, M</code> (Uses HL pointer).",
+                                text_ar: "استخدام السجلات كمؤشرات.<br>• LDAX B (يحمل لـ A من العنوان الموجود في BC).<br>• MOV B, M (يستخدم HL كمؤشر)."
+                            },
+                            {
+                                type: "list",
+                                head_en: "5. Stack Data Transfer",
+                                text_en: "LIFO Memory. <code>PUSH</code> (Save) & <code>POP</code> (Retrieve).<br>Rule: Must happen in pairs.",
+                                text_ar: "التعامل مع المكدس. PUSH للحفظ و POP للاسترجاع.<br>قاعدة: يجب أن تكون العمليات أزواجاً."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Part 3: Special & I/O",
+                        title_ar: "تعليمات خاصة والمداخل/المخارج",
+                        colorClass: "bg-purple-500",
+                        items: [
+                            { type: "list", head_en: "XCHG", text_en: "Exchanges <b>HL</b> with <b>DE</b>.", text_ar: "يبدل محتويات HL مع DE." },
+                            { type: "list", head_en: "SPHL", text_en: "Copies <b>HL</b> into <b>Stack Pointer</b>.", text_ar: "ينسخ HL إلى مؤشر المكدس." },
+                            { type: "list", head_en: "IN / OUT", text_en: "<code>IN port</code> (Read) / <code>OUT port</code> (Write).", text_ar: "IN للقراءة من منفذ، OUT للكتابة إلى منفذ." }
+                        ]
+                    },
+                    {
+                        title_en: "Part 4: Programming Logic (A+)",
+                        title_ar: "منطق البرمجة (مهم جداً)",
+                        colorClass: "bg-emerald-500",
+                        items: [
+                            {
+                                type: "code",
+                                caption_en: "A. I/O Control Program",
+                                caption_ar: "أ. برنامج التحكم بالمدخلات والمخرجات",
+                                code: `IN 00H       ; Read switches to A
+OUT 01H      ; Write A to lights
+HLT          ; Stop`
+                            },
+                            {
+                                type: "code",
+                                caption_en: "B. Block Transfer (Looping)",
+                                caption_ar: "ب. نقل كتلة من البيانات (مع حلقة تكرار)",
+                                code: `LXI H, DF10H ; Source Pointer (HL)
+LXI D, DF70H ; Destination Pointer (DE)
+MVI B, 10H   ; Counter (16 bytes)
+
+LOOP:        ; Label for jumping
+MOV A, M     ; Get data from Source
+STAX D       ; Store to Destination
+INX H        ; Next Source Address
+INX D        ; Next Dest Address
+DCR B        ; Decrement Counter
+JNZ LOOP     ; If B != 0, Go to LOOP
+HLT          ; Stop when B = 0`
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Part 5: Exam Cheat-Sheet",
+                        title_ar: "ملخص للامتحان",
+                        colorClass: "bg-slate-500",
+                        items: [
+                            {
+                                type: "table",
+                                headers: ["Type", "Instruction", "Example"],
+                                rows: [
+                                    ["Immediate", "MVI, LXI", "MVI B, 50H"],
+                                    ["Register", "MOV", "MOV A, B"],
+                                    ["Direct", "LDA, STA", "LDA 2000H"],
+                                    ["Indirect", "LDAX, STAX", "LDAX B"],
+                                    ["Stack", "PUSH, POP", "PUSH H"],
+                                    ["Exchange", "XCHG", "XCHG"]
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Final Exam Tip",
+                        title_ar: "نصيحة للامتحان النهائي",
+                        colorClass: "bg-rose-500",
+                        items: [
+                            {
+                                type: "tip",
+                                head_en: "Processing Arrays?",
+                                text_en: "If the question asks to transfer data from memory (e.g., 1000H) to Reg B, you can use 'LDA 1000H' then 'MOV B,A'. BUT, for Arrays/Blocks, always use pointers: 'LXI H, 1000H' then 'MOV B,M'.",
+                                text_ar: "إذا طلب نقل بيانات من الذاكرة للسجل B، يمكنك استخدام الطريقة المباشرة (LDA). لكن! في حالة المصفوفات والكتل (Arrays)، استخدم دائماً المؤشرات: LXI H ثم MOV B,M."
+                            }
+                        ]
+                    }
+                ]);
+
+                return { showArabic, toggleLanguage, chapterData, highlightASM };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

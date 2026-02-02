@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 3: Arithmetic & Logic | Microprocessor 8085</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { background-color: #f8fafc; }
+        .font-en { font-family: 'Inter', sans-serif; }
+        .font-ar { font-family: 'Cairo', sans-serif; }
+        .font-code { font-family: 'Fira Code', monospace; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .code-window {
+            background: #1e1e2e;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            border: 1px solid #313244;
+            overflow: hidden;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .window-header {
+            background: #181825;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #313244;
+        }
+
+        .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+
+        /* Syntax Colors */
+        .asm-cmd { color: #cba6f7; font-weight: bold; }
+        .asm-reg { color: #89b4fa; font-weight: bold; }
+        .asm-num { color: #fab387; }
+        .asm-comment { color: #6c7086; font-style: italic; }
+        .asm-label { color: #a6e3a1; font-weight: bold; }
+    </style>
+</head>
+
+<body class="antialiased text-slate-800">
+
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-en font-bold text-sm">
+                    <i class="ph-bold ph-arrow-left text-lg"></i>
+                    <span class="hidden md:inline">Back to Home</span>
+                </a>
+                <div class="absolute left-1/2 transform -translate-x-1/2 text-center">
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-widest font-en">Chapter 3</span>
+                    <h1 class="font-en font-bold text-slate-800 text-sm md:text-base">Arithmetic & Logic</h1>
+                </div>
+                <button @click="toggleLanguage"
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-xs font-bold font-en"
+                    :class="showArabic ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'">
+                    <i class="ph-fill ph-translate text-lg"></i>
+                    <span>{{ showArabic ? 'AR : ON' : 'AR : OFF' }}</span>
+                </button>
+            </div>
+        </nav>
+
+        <header class="bg-slate-900 text-white py-12 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-rose-900/50 to-orange-900/50"></div>
+            <div class="container mx-auto px-4 relative z-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-en mb-4">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    ALU Operations
+                </div>
+                <h1 class="text-3xl md:text-5xl font-en font-black mb-4">Arithmetic & Logical Instructions</h1>
+                <transition name="fade">
+                    <p v-if="showArabic" class="font-ar text-slate-300 text-lg md:text-xl" dir="rtl">
+                        العمليات الحسابية، المنطقية، التدوير، والمقارنة (مع فخاخ الامتحانات).
+                    </p>
+                    <p v-else class="font-en text-slate-400 text-sm md:text-base max-w-xl mx-auto">
+                        Addition, Subtraction, Logic Gates, Rotate, Compare, and Exam Traps.
+                    </p>
+                </transition>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 py-12 max-w-4xl space-y-12">
+
+            
+
+[Image of Logic Gates symbols AND OR XOR NOT]
+
+
+            <section v-for="(section, index) in chapterData" :key="index" class="scroll-mt-24">
+                
+                <div class="flex items-baseline gap-4 mb-6 border-b border-slate-200 pb-2 flex-wrap">
+                    <h2 class="text-2xl font-en font-bold text-slate-800">{{ section.title_en }}</h2>
+                    <span v-if="showArabic" class="text-lg font-ar text-blue-600 w-full md:w-auto text-right md:ml-auto" dir="rtl">
+                        {{ section.title_ar }}
+                    </span>
+                </div>
+
+                <div class="mb-6" v-if="section.desc_en">
+                    <p class="font-en text-slate-600 leading-relaxed mb-2">{{ section.desc_en }}</p>
+                    <p v-if="showArabic" class="font-ar text-slate-500 text-sm leading-relaxed dir-rtl border-r-2 border-blue-400 pr-3 bg-blue-50/50 p-2 rounded-l-lg text-right">
+                        {{ section.desc_ar }}
+                    </p>
+                </div>
+
+                <div class="grid gap-6">
+                    <div v-for="(item, idx) in section.items" :key="idx"
+                        class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden">
+
+                        <div class="absolute left-0 top-0 h-full w-1" :class="section.colorClass"></div>
+
+                        <div v-if="item.type === 'list'">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-en font-bold text-lg text-slate-800">{{ item.head_en }}</h3>
+                                <span v-if="item.badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-700 font-en border border-rose-200">
+                                    {{ item.badge }}
+                                </span>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="font-en text-slate-600 text-sm leading-relaxed pl-2 border-l border-slate-200">
+                                    <span v-html="item.text_en"></span>
+                                </div>
+                                <div v-if="showArabic" class="font-ar text-slate-500 text-sm leading-relaxed dir-rtl pr-2 border-r border-blue-200 text-right">
+                                    <span v-html="item.text_ar"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'table'" class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-en text-slate-500">
+                                        <th v-for="h in item.headers" class="p-3">{{ h }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm font-en">
+                                    <tr v-for="row in item.rows" class="border-b border-slate-50 hover:bg-slate-50/50">
+                                        <td v-for="cell in row" class="p-3 text-slate-700 font-medium" v-html="cell"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div v-if="item.type === 'code'" class="dir-ltr">
+                            <div class="code-window">
+                                <div class="window-header">
+                                    <div class="flex gap-1.5">
+                                        <div class="dot bg-red-400"></div>
+                                        <div class="dot bg-yellow-400"></div>
+                                        <div class="dot bg-green-400"></div>
+                                    </div>
+                                    <div class="ml-auto text-[10px] font-code text-slate-500 uppercase opacity-60">ASM 8085</div>
+                                </div>
+                                <pre class="m-0 bg-[#1e1e2e] p-5 overflow-x-auto"><code class="font-code text-sm !bg-transparent p-0 text-slate-200" v-html="highlightASM(item.code)"></code></pre>
+                            </div>
+                            <div class="mt-4 border-t border-slate-100 pt-3">
+                                <h4 class="font-en font-bold text-xs text-slate-500 uppercase mb-2">Analysis:</h4>
+                                <div class="font-en text-sm text-slate-600 mb-2" v-html="item.exp_en"></div>
+                                <div v-if="showArabic" class="font-ar text-sm text-blue-700 dir-rtl text-right bg-blue-50 p-2 rounded" v-html="item.exp_ar"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="py-8 text-center text-slate-400 text-xs font-en border-t border-slate-200">
+            <p>IT Engineering - 2026</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+
+        createApp({
+            setup() {
+                const showArabic = ref(true);
+                const toggleLanguage = () => showArabic.value = !showArabic.value;
+
+                // --- Syntax Highlighter ---
+                const highlightASM = (code) => {
+                    if (!code) return '';
+                    // Added instructions for Ch3
+                    const instructions = /\b(ADD|ADI|ADC|ACI|SUB|SUI|SBB|SBI|INR|DCR|ANA|ANI|ORA|ORI|XRA|XRI|CMA|CMC|STC|CMP|CPI|RLC|RRC|RAL|RAR|MOV|MVI|LDA|STA|LXI|IN|OUT|HLT|JNC|JC|JZ|JNZ)\b/ig;
+                    const registers = /\b(A|B|C|D|E|H|L|SP|PC|PSW|M)\b/g;
+                    const hex = /\b([0-9][0-9A-F]*H?|[0-9A-F]+H)\b/ig;
+                    const label = /\b([A-Z0-9_]+:)/ig;
+
+                    return code.split('\n').map(line => {
+                        let [codePart, ...commentParts] = line.split(';');
+                        let comment = commentParts.join(';');
+
+                        if (codePart) {
+                            codePart = codePart
+                                .replace(label, '<span class="asm-label">$1</span>')
+                                .replace(instructions, '<span class="asm-cmd">$1</span>')
+                                .replace(hex, '<span class="asm-num">$1</span>')
+                                .replace(registers, '<span class="asm-reg">$1</span>');
+                        }
+                        if (comment !== undefined) return `${codePart}<span class="asm-comment">;${comment}</span>`;
+                        return codePart;
+                    }).join('\n');
+                };
+
+                // --- DATA STORE (Chapter 3) ---
+                const chapterData = ref([
+                    {
+                        title_en: "1. Arithmetic Operations",
+                        title_ar: "العمليات الحسابية",
+                        colorClass: "bg-rose-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "Addition (ADD, ADI)",
+                                text_en: "• <code>ADD R/M</code>: Adds Reg/Memory to Accumulator.<br>• <code>ADI 8-bit</code>: Adds immediate number to A.<br>• <b>Note:</b> Carry (CY) propagates in double precision.",
+                                text_ar: "• ADD R/M: يجمع السجل أو الذاكرة مع المركم.<br>• ADI: يجمع رقم فوري مع المركم.<br>• ملاحظة: يتم ترحيل الحمل (Carry) في الأرقام الكبيرة."
+                            },
+                            {
+                                type: "list",
+                                head_en: "Subtraction (SUB, SUI)",
+                                text_en: "Uses <b>2's Complement</b> logic internally:<br>1. Get 1's Comp of subtrahend.<br>2. Add 1 (to get 2's Comp).<br>3. Add to Accumulator.<br>4. <b>Complement</b> the Carry flag for borrow status.",
+                                text_ar: "يستخدم <b>المتمم الثنائي</b> داخلياً:<br>1. نوجد المتمم الأحادي للمطروح.<br>2. نضيف 1 (للحصول على المتمم الثنائي).<br>3. نجمعه مع المركم.<br>4. <b>نعكس</b> راية الحمل (Carry) لمعرفة الاستلاف."
+                            },
+                            {
+                                type: "list",
+                                head_en: "Increment & Decrement (INR, DCR)",
+                                badge: "Exam Trap ⚠️",
+                                text_en: "Increases/Decreases by 1. <br><b>Important:</b> These instructions affect all flags <b>EXCEPT</b> the Carry (CY) flag.",
+                                text_ar: "زيادة أو نقصان بواحد.<br><b>فخ مهم:</b> هذه التعليمات تؤثر في جميع الرايات <b>ماعدا</b> راية الحمل (CY)."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "2. Logical Operations",
+                        title_ar: "العمليات المنطقية",
+                        colorClass: "bg-purple-500",
+                        items: [
+                            { type: "list", head_en: "AND (ANA, ANI)", text_en: "Masks bits (Forces to 0).<br>Flags: CY=0, AC=1.", text_ar: "تستخدم للقناع (تصفير بتات).<br>الرايات: CY=0 و AC=1." },
+                            { type: "list", head_en: "OR (ORA, ORI)", text_en: "Sets bits (Forces to 1).<br>Flags: CY=0, AC=0.", text_ar: "تستخدم لتفعيل بتات (جعلها 1).<br>الرايات: CY=0 و AC=0." },
+                            { type: "list", head_en: "XOR (XRA, XRI)", text_en: "Inverts bits or checks equality. <br><code>XRA A</code> clears Accumulator.", text_ar: "تعكس البتات أو تفحص التطابق.<br>الأمر XRA A يصفر المركم." },
+                            { type: "list", head_en: "NOT (CMA)", text_en: "1's Complement (Invert all bits). No flags affected.", text_ar: "المتمم الأحادي (عكس كل البتات). لا يؤثر في الرايات." }
+                        ]
+                    },
+                    {
+                        title_en: "3. Rotate Instructions",
+                        title_ar: "تعليمات التدوير",
+                        colorClass: "bg-blue-500",
+                        items: [
+                            { type: "list", head_en: "RLC / RRC", text_en: "8-bit rotate. Bit moves to Carry AND back to start.", text_ar: "تدوير 8-بت. البت ينتقل للحمل (Carry) ويعود للبداية أيضاً." },
+                            { type: "list", head_en: "RAL / RAR", text_en: "9-bit rotate. Rotates through Carry (Carry acts as 9th bit).", text_ar: "تدوير 9-بت. التدوير يمر عبر الحمل (يعتبر كبت تاسع)." }
+                        ]
+                    },
+                    {
+                        title_en: "4. Compare Instructions (CMP, CPI)",
+                        title_ar: "تعليمات المقارنة",
+                        desc_en: "Performs (A - Data) but discards result. Only flags change.",
+                        desc_ar: "تقوم بطرح وهمي (A - Data) ولا تحفظ النتيجة. تتغير الرايات فقط.",
+                        colorClass: "bg-orange-500",
+                        items: [
+                            {
+                                type: "table",
+                                headers: ["Condition", "Flags", "Meaning"],
+                                rows: [
+                                    ["(A) < Data", "<b>CY = 1</b>, Z = 0", "A is Smaller (Borrow)"],
+                                    ["(A) = Data", "CY = 0, <b>Z = 1</b>", "Equal (Zero result)"],
+                                    ["(A) > Data", "<b>CY = 0</b>, Z = 0", "A is Larger"]
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "5. Solved Examples",
+                        title_ar: "أمثلة محلولة",
+                        colorClass: "bg-emerald-500",
+                        items: [
+                            {
+                                type: "code",
+                                code: `MVI A, 30H   ; A = 30H
+MVI C, 39H   ; C = 39H
+SUB C        ; A = 30H - 39H`,
+                                exp_en: "<b>Step-by-step Subtraction:</b><br>1. 39H (0011 1001) → 1's Comp (1100 0110).<br>2. Add 1 → 2's Comp (1100 0111).<br>3. Add to 30H (0011 0000).<br>4. Result = F7H. No internal carry generated, so <b>CY=1</b> (Borrow).",
+                                exp_ar: "<b>خطوات الطرح:</b><br>1. نحول 39H للمتمم الأحادي.<br>2. نضيف 1 للحصول على المتمم الثنائي.<br>3. نجمعه مع 30H.<br>4. النتيجة F7H. بما أنه لا يوجد حمل داخلي، يتم عكسه ليصبح <b>CY=1</b> (دلالة على الاستلاف)."
+                            },
+                            {
+                                type: "code",
+                                code: `MVI B, 91H   ; Bedroom (1001 0001)
+MVI C, A8H   ; Kitchen (1010 1000)
+MOV A, B     ; Move B to A
+ORA C        ; OR Operation`,
+                                exp_en: "<b>Logic (ORing Ports):</b><br>1001 0001 (A)<br>OR 1010 1000 (C)<br>Result: <b>1011 1001 (B9H)</b>. Turns on devices active in *either* place.",
+                                exp_ar: "<b>المنطق (بوابة OR):</b><br>نقوم بعمل OR للقيمتين.<br>النتيجة B9H، وهي تشغل الأجهزة المفعلة في أي من المكانين."
+                            },
+                            {
+                                type: "code",
+                                code: `LXI H, 2050H ; Point to memory
+MVI A, 64H   ; A = 64H
+CMP M        ; Compare A with Memory
+JNC RR1      ; Jump if No Carry (If A > M)`,
+                                exp_en: "<b>Conditional Logic:</b> We want to verify if Memory < A.<br>This is same as (A > M).<br>If A > M, then <b>CY = 0</b>.<br>So we use <b>JNC</b> (Jump if No Carry).",
+                                exp_ar: "<b>منطق المقارنة:</b> نريد التحقق هل الذاكرة أصغر من A.<br>وهذا يعني أن A أكبر من الذاكرة.<br>إذا كان A > M، فإن الحمل <b>CY=0</b>.<br>لذلك نستخدم <b>JNC</b> (اقفز إذا لم يوجد حمل)."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Exam Cheat Sheet",
+                        title_ar: "ملخص الحفظ للامتحان",
+                        colorClass: "bg-slate-500",
+                        items: [
+                            { type: "list", head_en: "INR / DCR", text_en: "Affect all flags <b>EXCEPT Carry (CY)</b>.", text_ar: "تؤثر في كل الرايات ماعدا الحمل." },
+                            { type: "list", head_en: "CMP", text_en: "Like Subtraction, but discards result (Only Flags change).", text_ar: "مثل الطرح ولكن يهمل النتيجة (الرايات فقط تتغير)." },
+                            { type: "list", head_en: "ANI", text_en: "Clears Carry Flag (CY=0).", text_ar: "تصفر راية الحمل دائماً." },
+                            { type: "list", head_en: "XRA A", text_en: "Clears Accumulator (A=00) and Carry Flag.", text_ar: "تصفر المركم وراية الحمل." }
+                        ]
+                    }
+                ]);
+
+                return { showArabic, toggleLanguage, chapterData, highlightASM };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>

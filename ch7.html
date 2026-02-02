@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 7: Looping & Block Transfers | Microprocessor 8085</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { background-color: #f8fafc; }
+        
+        /* Fonts */
+        .font-en { font-family: 'Inter', sans-serif; }
+        .font-ar { font-family: 'Cairo', sans-serif; }
+        .font-code { font-family: 'Fira Code', monospace; }
+
+        /* RTL Fixes */
+        .is-rtl {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+        .is-rtl code, 
+        .is-rtl .en-term {
+            direction: ltr;
+            unicode-bidi: isolate; 
+            font-family: 'Fira Code', monospace;
+            background-color: #f1f5f9;
+            padding: 0 4px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            display: inline-block; 
+        }
+        .is-rtl ul { padding-right: 1.5rem; padding-left: 0; }
+
+        /* Code Window */
+        .code-window {
+            background: #1e1e2e;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            border: 1px solid #313244;
+            overflow: hidden;
+            direction: ltr;
+            text-align: left;
+        }
+        .window-header {
+            background: #181825;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #313244;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+
+        /* Syntax Highlighting */
+        .asm-cmd { color: #cba6f7; font-weight: bold; } 
+        .asm-reg { color: #89b4fa; font-weight: bold; }
+        .asm-num { color: #fab387; }
+        .asm-comment { color: #6c7086; font-style: italic; }
+        .asm-label { color: #94e2d5; font-weight: bold; }
+
+        [v-cloak] { display: none; }
+    </style>
+</head>
+
+<body class="antialiased text-slate-800">
+
+    <div id="app" v-cloak class="min-h-screen flex flex-col">
+
+        <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-en font-bold text-sm">
+                    <i class="ph-bold ph-arrow-left text-lg"></i>
+                    <span class="hidden md:inline">Back to Home</span>
+                </a>
+                
+                <div class="absolute left-1/2 transform -translate-x-1/2 text-center">
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-widest font-en">Chapter 7</span>
+                    <h1 class="font-en font-bold text-slate-800 text-sm md:text-base">Looping & Block Transfers</h1>
+                </div>
+
+                <button @click="toggleLanguage"
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-xs font-bold font-en"
+                    :class="showArabic ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'">
+                    <i class="ph-fill ph-translate text-lg"></i>
+                    <span>{{ showArabic ? 'AR : ON' : 'AR : OFF' }}</span>
+                </button>
+            </div>
+        </nav>
+
+        <header class="bg-slate-900 text-white py-12 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-green-900/50 to-emerald-900/50"></div>
+            <div class="container mx-auto px-4 relative z-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-en mb-4">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    Advanced Programming
+                </div>
+                <h1 class="text-3xl md:text-5xl font-en font-black mb-4">Looping & Block Transfers</h1>
+                
+                <div class="max-w-xl mx-auto min-h-[3rem]">
+                    <p v-if="showArabic" class="font-ar text-slate-300 text-lg md:text-xl is-rtl">
+                        الحلقات التكرارية، العدادات، ونقل كتل البيانات (Transfers & Exchanges).
+                    </p>
+                    <p v-else class="font-en text-slate-400 text-sm md:text-base">
+                        Logic Flow, Counters, Pointers, and Data Block Manipulation.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 py-12 max-w-4xl space-y-12">
+
+            <section v-for="(section, index) in chapterData" :key="index" class="scroll-mt-24">
+                
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 mb-6 border-b border-slate-200 pb-2">
+                    <h2 class="text-2xl font-en font-bold text-slate-800">{{ section.title_en }}</h2>
+                    <span v-if="showArabic" class="text-lg font-ar text-blue-600 is-rtl w-full md:w-auto md:ml-auto">
+                        {{ section.title_ar }}
+                    </span>
+                </div>
+
+                <div class="mb-6 space-y-2" v-if="section.desc_en">
+                    <p class="font-en text-slate-600 leading-relaxed" v-html="section.desc_en"></p>
+                    <div v-if="showArabic" class="is-rtl bg-blue-50/50 p-3 rounded-lg border-r-4 border-blue-400">
+                        <p class="font-ar text-slate-600 text-sm leading-relaxed" v-html="section.desc_ar"></p>
+                    </div>
+                </div>
+
+                <div class="grid gap-6">
+                    <div v-for="(item, idx) in section.items" :key="idx"
+                        class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden">
+
+                        <div class="absolute left-0 top-0 h-full w-1" :class="section.colorClass"></div>
+
+                        <div v-if="item.type === 'list'">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-en font-bold text-lg text-slate-800" v-html="item.head_en"></h3>
+                                <span v-if="item.badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700 font-en border border-green-200">
+                                    {{ item.badge }}
+                                </span>
+                            </div>
+                            <div class="grid gap-3">
+                                <div class="font-en text-slate-600 text-sm leading-relaxed pl-2 border-l border-slate-200">
+                                    <span v-html="item.text_en"></span>
+                                </div>
+                                <div v-if="showArabic" class="is-rtl font-ar text-slate-600 text-sm leading-relaxed pr-2 border-r border-blue-200">
+                                    <span v-html="item.text_ar"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'code'" class="dir-ltr">
+                            <div class="code-window">
+                                <div class="window-header">
+                                    <div class="flex gap-1.5">
+                                        <div class="dot bg-red-400"></div>
+                                        <div class="dot bg-yellow-400"></div>
+                                        <div class="dot bg-green-400"></div>
+                                    </div>
+                                    <div class="ml-auto text-[10px] font-code text-slate-500 uppercase opacity-60">ASM Source</div>
+                                </div>
+                                <pre class="m-0 bg-[#1e1e2e] p-5 overflow-x-auto"><code class="font-code text-sm !bg-transparent p-0 text-slate-200 block" v-html="highlightASM(item.code)"></code></pre>
+                            </div>
+                            <div class="mt-4 border-t border-slate-100 pt-3" v-if="item.exp_en">
+                                <h4 class="font-en font-bold text-xs text-slate-500 uppercase mb-2">Analysis:</h4>
+                                <div class="font-en text-sm text-slate-600 mb-3" v-html="item.exp_en"></div>
+                                <div v-if="showArabic" class="is-rtl font-ar text-sm text-blue-800 bg-blue-50 p-3 rounded border-r-2 border-blue-400">
+                                    <span v-html="item.exp_ar"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'tip'" class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                            <h3 class="font-en font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                <i class="ph-fill ph-lightbulb"></i> {{ item.head_en }}
+                            </h3>
+                            <div class="space-y-2">
+                                <p class="font-en text-sm text-amber-900" v-html="item.text_en"></p>
+                                <p v-if="showArabic" class="is-rtl font-ar text-sm text-amber-900 border-r-2 border-amber-400 pr-2" v-html="item.text_ar"></p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="py-8 text-center text-slate-400 text-xs font-en border-t border-slate-200">
+            <p>IT Engineering - 2026 | 8085 Microprocessor Course</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+
+        createApp({
+            setup() {
+                const showArabic = ref(true);
+                const toggleLanguage = () => showArabic.value = !showArabic.value;
+
+                // --- Syntax Highlighter ---
+                const highlightASM = (code) => {
+                    if (!code) return '';
+                    
+                    // Added: DCX, LDAX, STAX, ORA
+                    const instructions = /\b(MOV|MVI|LDA|STA|LHLD|SHLD|LXI|LDAX|STAX|XCHG|ADD|ADI|SUB|SUI|INR|DCR|INX|DCX|DAD|JMP|JZ|JNZ|JC|JNC|CALL|RET|HLT|OUT|IN|CMP|CPI|ORA)\b/ig;
+                    const registers = /\b(A|B|C|D|E|H|L|SP|PC|PSW|M)\b/g;
+                    const hex = /\b([0-9][0-9A-F]*H?|[0-9A-F]+H)\b/ig;
+                    const label = /\b([A-Z0-9_]+:)/ig;
+
+                    return code.split('\n').map(line => {
+                        let [codePart, ...commentParts] = line.split(';');
+                        let comment = commentParts.join(';');
+
+                        if (codePart) {
+                            codePart = codePart
+                                .replace(label, '<span class="asm-label">$1</span>')
+                                .replace(instructions, '<span class="asm-cmd">$1</span>')
+                                .replace(hex, '<span class="asm-num">$1</span>')
+                                .replace(registers, '<span class="asm-reg">$1</span>');
+                        }
+                        if (comment !== undefined && comment !== "") return `${codePart}<span class="asm-comment">;${comment}</span>`;
+                        return codePart;
+                    }).join('\n');
+                };
+
+                // --- DATA STORE ---
+                const chapterData = ref([
+                    {
+                        title_en: "1. Core Concept: The Loop & Counter",
+                        title_ar: "المفهوم الأساسي: الحلقة والعداد",
+                        desc_en: "Before writing code, understand the logic flow used in all programs.",
+                        desc_ar: "قبل كتابة الكود، يجب فهم تدفق المنطق المستخدم في كل البرامج.",
+                        colorClass: "bg-indigo-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "The Logic Flow",
+                                text_en: "1. <b>Initialize:</b> Set up starting values (pointers, counters).<br>2. <b>Action:</b> Perform the task (e.g., move a byte).<br>3. <b>Update:</b> Change values (increment pointers, decrement counter).<br>4. <b>Check:</b> Is counter finished? If No -> Repeat. If Yes -> End.",
+                                text_ar: "1. <b>التهيئة:</b> ضبط القيم الأولية (مؤشرات، عدادات).<br>2. <b>الإجراء:</b> تنفيذ المهمة (نقل، جمع...).<br>3. <b>التحديث:</b> زيادة المؤشرات وإنقاص العداد.<br>4. <b>الفحص:</b> هل انتهى العداد؟ لا -> كرر. نعم -> توقف."
+                            },
+                            {
+                                type: "list",
+                                head_en: "How to Construct a Counter",
+                                text_en: "• <b>Loading:</b> <code>MVI B, 10</code> (Load number).<br>• <b>Updating:</b> <code>DCR B</code> (Decrement).<br>• <b>Checking:</b> <code>JNZ LOOP</code> (Jump if Not Zero).",
+                                text_ar: "• <b>التحميل:</b> ضع رقماً في السجل.<br>• <b>التحديث:</b> استخدم DCR للإنقاص.<br>• <b>الفحص:</b> استخدم JNZ للقفز ما دام العداد لا يساوي صفراً."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "2. Block Data Transfers (Standard)",
+                        title_ar: "نقل كتل البيانات (الطريقة القياسية)",
+                        desc_en: "Moving a block of data from Source to Destination efficiently using loops.",
+                        desc_ar: "نقل مجموعة بيانات من المصدر للوجهة بكفاءة باستخدام الحلقات.",
+                        colorClass: "bg-green-600",
+                        items: [
+                            {
+                                type: "code",
+                                code: `START:  MVI  B, COUNT   ; Initialize Counter
+        LXI  D, DEST    ; Point to Destination
+        LXI  H, SOUR    ; Point to Source
+
+LOOP:   MOV  A, M       ; 1. Get byte from Source
+        STAX D          ; 2. Store to Destination
+        INX  H          ; 3. Inc Source Pointer
+        INX  D          ; 4. Inc Dest Pointer
+        DCR  B          ; 5. Dec Counter
+        JNZ  LOOP       ; 6. Repeat if not zero
+ENDP:   JMP  ENDP       ; End`,
+                                exp_en: "<b>Standard Pattern:</b> Memorize this. It uses HL and DE as pointers and B as a counter (max 256 bytes).",
+                                exp_ar: "<b>الكود القياسي:</b> احفظ هذا الهيكل. يستخدم HL و DE كمؤشرات، و B كعداد (بحد أقصى 256 بايت)."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "3. Complex Transfers (Important)",
+                        title_ar: "نقل البيانات المعقد (هام جداً)",
+                        desc_en: "Handling edge cases like Large Blocks (>256) and 16-bit Words.",
+                        desc_ar: "التعامل مع الحالات الخاصة مثل الكتل الكبيرة والبيانات 16-بت.",
+                        colorClass: "bg-purple-600",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "Case A: Large Blocks (> 256 Bytes)",
+                                text_en: "• Must use a <b>Register Pair (BC)</b> as counter.<br>• <b>Problem:</b> <code>DCX B</code> does NOT set the Zero Flag.<br>• <b>Solution:</b> Check manually: <code>MOV A,B</code> then <code>ORA C</code>.",
+                                text_ar: "• نستخدم زوج سجلات <b>BC</b> كعداد.<br>• <b>المشكلة:</b> الأمر <code>DCX</code> لا يؤثر في راية الصفر.<br>• <b>الحل:</b> نفحص يدوياً بدمج السجلين: <code>MOV A,B</code> ثم <code>ORA C</code>."
+                            },
+                            {
+                                type: "code",
+                                code: `        ; Inside Loop
+        DCX  B          ; Decrement 16-bit counter
+        MOV  A, B       ; Move High byte to A
+        ORA  C          ; OR with Low byte
+        JNZ  LOOP       ; If result != 0, Repeat`,
+                                exp_en: "<b>Zero Check Logic:</b> If (B OR C) is zero, it means BOTH registers are zero. Otherwise, loop continues.",
+                                exp_ar: "<b>منطق فحص الصفر:</b> إذا كان ناتج (B OR C) صفراً، فهذا يعني أن كلا السجلين فارغ. وإلا، استمر في الحلقة."
+                            },
+                            {
+                                type: "code",
+                                code: `MWORD:  MOV  A, M       ; Get Low Byte
+        STAX D          ; Store Low Byte
+        INX  D
+        INX  H          ; Adjust Ptrs...
+        
+        MOV  A, M       ; Get High Byte
+        STAX D          ; Store High Byte
+        INX  D
+        INX  H          ; Adjust Ptrs...
+        
+        DCX  B          ; Decrement Pair Counter
+        MOV  A, B       ; Check Zero...
+        ORA  C
+        JNZ  MWORD      ; Repeat`,
+                                exp_en: "<b>Case B: Word Transfer (16-bit):</b><br>We transfer the Low Byte first, then increment pointers, then transfer High Byte. Effectively moving 2 bytes per loop.",
+                                exp_ar: "<b>نقل الكلمات (Words):</b><br>ننقل البايت السفلي أولاً، نزيد المؤشرات، ثم ننقل البايت العلوي. فعلياً ننقل بايتين في كل دورة."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "4. Block Exchanges",
+                        title_ar: "تبديل الكتل (Block Exchange)",
+                        desc_en: "Swapping data between two locations (Source <-> Dest).",
+                        desc_ar: "تبديل البيانات بين موقعين (المصدر يذهب للوجهة والعكس).",
+                        colorClass: "bg-teal-500",
+                        items: [
+                            {
+                                type: "code",
+                                code: `LOOP:   MOV  C, M       ; 1. Copy Source to Temp (C)
+        LDAX D          ; 2. Load Dest to A
+        MOV  M, A       ; 3. Move A (Old Dest) to Source
+        MOV  A, C       ; 4. Move C (Old Source) to A
+        STAX D          ; 5. Store A to Dest
+        INX  D          
+        INX  H
+        DCR  B          
+        JNZ  LOOP`,
+                                exp_en: "<b>Exchange Logic:</b> We need a temporary register (C) to hold one value while we overwrite it with the other.",
+                                exp_ar: "<b>منطق التبديل:</b> نحتاج لسجل مؤقت (C) لحفظ القيمة الأولى بينما نقوم بالكتابة فوقها بالقيمة الثانية."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "5. Solved Exercise: Word Block Exchange",
+                        title_ar: "تمرين محلول: تبديل كتل 16-بت",
+                        desc_en: "Task: Exchange 500H words starting at 9000H with 9100H.",
+                        desc_ar: "المطلوب: تبديل 500H كلمة بين الموقعين 9000H و 9100H.",
+                        colorClass: "bg-emerald-600",
+                        items: [
+                            {
+                                type: "code",
+                                code: `        LXI  B, 0500H   ; Counter (BC) > 256
+        LXI  H, 9000H   ; Source
+        LXI  D, 9100H   ; Dest
+
+LOOP:   ; -- SWAP LOW BYTE --
+        MOV  C, M
+        LDAX D
+        MOV  M, A
+        MOV  A, C
+        STAX D
+        INX  H
+        INX  D
+
+        ; -- SWAP HIGH BYTE --
+        MOV  C, M       ; Reuse C for High Byte
+        LDAX D
+        MOV  M, A
+        MOV  A, C
+        STAX D
+        INX  H
+        INX  D
+
+        ; -- CHECK COUNTER --
+        DCX  B
+        MOV  A, B
+        ORA  C
+        JNZ  LOOP
+        HLT`,
+                                exp_en: "<b>Analysis:</b><br>1. <b>Size:</b> 500H words -> Large Count (Use BC).<br>2. <b>Type:</b> Words -> Swap twice per loop.<br>3. <b>Operation:</b> Exchange -> Use Temp register.",
+                                exp_ar: "<b>التحليل:</b><br>1. الحجم كبير (500H) ← استخدم الزوج BC.<br>2. النوع (Words) ← كرر التبديل مرتين (للبايت السفلي والعلوي).<br>3. العملية (Exchange) ← استخدم سجلاً مؤقتاً."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Summary Checklist",
+                        title_ar: "قائمة المراجعة للامتحان",
+                        colorClass: "bg-slate-500",
+                        items: [
+                            { type: "list", head_en: "Small Count (<= 256)", text_en: "Use Register <b>B</b> and <code>DCR B</code>.", text_ar: "للعداد الصغير: استخدم B و DCR." },
+                            { type: "list", head_en: "Large Count (> 256)", text_en: "Use Pair <b>BC</b> and <code>DCX B</code> + <code>MOV A,B / ORA C</code>.", text_ar: "للعداد الكبير: استخدم BC و DCX مع فحص ORA." },
+                            { type: "list", head_en: "Transfer vs Exchange", text_en: "Transfer = Copy (Overwrites Dest). Exchange = Swap (Preserves both using Temp).", text_ar: "النقل ينسخ ويحذف القديم. التبديل يحافظ على الاثنين (يحتاج Temp)." }
+                        ]
+                    }
+                ]);
+
+                return { showArabic, toggleLanguage, chapterData, highlightASM };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>

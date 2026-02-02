@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 4: Control & Machine Instructions | Microprocessor 8085</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { background-color: #f8fafc; }
+        
+        /* Fonts */
+        .font-en { font-family: 'Inter', sans-serif; }
+        .font-ar { font-family: 'Cairo', sans-serif; }
+        .font-code { font-family: 'Fira Code', monospace; }
+
+        /* --- Fix for Mixed Arabic/English Text --- */
+        .is-rtl {
+            direction: rtl !important;
+            text-align: right !important;
+        }
+
+        /* Isolate English/Code inside Arabic Text */
+        .is-rtl code, 
+        .is-rtl .en-term {
+            direction: ltr;
+            unicode-bidi: isolate; 
+            font-family: 'Fira Code', monospace;
+            background-color: #f1f5f9;
+            padding: 0 4px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            display: inline-block; 
+        }
+
+        /* Fix Bullet Points in RTL */
+        .is-rtl ul { padding-right: 1.5rem; padding-left: 0; }
+
+        /* --- Code Window Styles --- */
+        .code-window {
+            background: #1e1e2e;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            border: 1px solid #313244;
+            overflow: hidden;
+            direction: ltr;
+            text-align: left;
+        }
+        .window-header {
+            background: #181825;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #313244;
+        }
+        .dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+
+        /* Syntax Highlighting */
+        .asm-cmd { color: #cba6f7; font-weight: bold; }
+        .asm-reg { color: #89b4fa; font-weight: bold; }
+        .asm-num { color: #fab387; }
+        .asm-comment { color: #6c7086; font-style: italic; }
+        .asm-label { color: #a6e3a1; font-weight: bold; }
+
+        [v-cloak] { display: none; }
+    </style>
+</head>
+
+<body class="antialiased text-slate-800">
+
+    <div id="app" v-cloak class="min-h-screen flex flex-col">
+
+        <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+            <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors font-en font-bold text-sm">
+                    <i class="ph-bold ph-arrow-left text-lg"></i>
+                    <span class="hidden md:inline">Back to Home</span>
+                </a>
+                
+                <div class="absolute left-1/2 transform -translate-x-1/2 text-center">
+                    <span class="text-xs font-bold text-blue-600 uppercase tracking-widest font-en">Chapter 4</span>
+                    <h1 class="font-en font-bold text-slate-800 text-sm md:text-base">Control & Interrupts</h1>
+                </div>
+
+                <button @click="toggleLanguage"
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-xs font-bold font-en"
+                    :class="showArabic ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'">
+                    <i class="ph-fill ph-translate text-lg"></i>
+                    <span>{{ showArabic ? 'AR : ON' : 'AR : OFF' }}</span>
+                </button>
+            </div>
+        </nav>
+
+        <header class="bg-slate-900 text-white py-12 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-teal-900/50 to-green-900/50"></div>
+            <div class="container mx-auto px-4 relative z-10 text-center">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-en mb-4">
+                    <span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+                    Program Flow & Hardware
+                </div>
+                <h1 class="text-3xl md:text-5xl font-en font-black mb-4">Control & Machine Instructions</h1>
+                
+                <div class="max-w-xl mx-auto min-h-[3rem]">
+                    <p v-if="showArabic" class="font-ar text-slate-300 text-lg md:text-xl is-rtl">
+                        التحكم الشامل: القفز، الدوال الفرعية، المقاطعات، والتحكم بالآلة.
+                    </p>
+                    <p v-else class="font-en text-slate-400 text-sm md:text-base">
+                        Comprehensive Review: Jumps, Subroutines, Interrupts, and Machine Control.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 py-12 max-w-4xl space-y-12">
+
+            <section v-for="(section, index) in chapterData" :key="index" class="scroll-mt-24">
+                
+                <div class="flex flex-col md:flex-row md:items-baseline gap-2 mb-6 border-b border-slate-200 pb-2">
+                    <h2 class="text-2xl font-en font-bold text-slate-800">{{ section.title_en }}</h2>
+                    <span v-if="showArabic" class="text-lg font-ar text-blue-600 is-rtl w-full md:w-auto md:ml-auto">
+                        {{ section.title_ar }}
+                    </span>
+                </div>
+
+                <div class="mb-6 space-y-2" v-if="section.desc_en">
+                    <p class="font-en text-slate-600 leading-relaxed" v-html="section.desc_en"></p>
+                    <div v-if="showArabic" class="is-rtl bg-blue-50/50 p-3 rounded-lg border-r-4 border-blue-400">
+                        <p class="font-ar text-slate-600 text-sm leading-relaxed" v-html="section.desc_ar"></p>
+                    </div>
+                </div>
+
+                <div class="grid gap-6">
+                    <div v-for="(item, idx) in section.items" :key="idx"
+                        class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-6 relative overflow-hidden">
+
+                        <div class="absolute left-0 top-0 h-full w-1" :class="section.colorClass"></div>
+
+                        <div v-if="item.type === 'list'">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-en font-bold text-lg text-slate-800" v-html="item.head_en"></h3>
+                                <span v-if="item.badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-teal-100 text-teal-700 font-en border border-teal-200">
+                                    {{ item.badge }}
+                                </span>
+                            </div>
+                            <div class="grid gap-3">
+                                <div class="font-en text-slate-600 text-sm leading-relaxed pl-2 border-l border-slate-200">
+                                    <span v-html="item.text_en"></span>
+                                </div>
+                                <div v-if="showArabic" class="is-rtl font-ar text-slate-600 text-sm leading-relaxed pr-2 border-r border-blue-200">
+                                    <span v-html="item.text_ar"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'table'" class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase font-en text-slate-500">
+                                        <th v-for="h in item.headers" class="p-3">{{ h }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm font-en">
+                                    <tr v-for="row in item.rows" class="border-b border-slate-50 hover:bg-slate-50/50">
+                                        <td v-for="cell in row" class="p-3 text-slate-700 font-medium" v-html="cell"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div v-if="item.type === 'code'" class="dir-ltr">
+                            <div class="code-window">
+                                <div class="window-header">
+                                    <div class="flex gap-1.5">
+                                        <div class="dot bg-red-400"></div>
+                                        <div class="dot bg-yellow-400"></div>
+                                        <div class="dot bg-green-400"></div>
+                                    </div>
+                                    <div class="ml-auto text-[10px] font-code text-slate-500 uppercase opacity-60">ASM Source</div>
+                                </div>
+                                <pre class="m-0 bg-[#1e1e2e] p-5 overflow-x-auto"><code class="font-code text-sm !bg-transparent p-0 text-slate-200 block" v-html="highlightASM(item.code)"></code></pre>
+                            </div>
+                            <div class="mt-4 border-t border-slate-100 pt-3">
+                                <h4 class="font-en font-bold text-xs text-slate-500 uppercase mb-2">Analysis:</h4>
+                                <div class="font-en text-sm text-slate-600 mb-3" v-html="item.exp_en"></div>
+                                <div v-if="showArabic" class="is-rtl font-ar text-sm text-blue-800 bg-blue-50 p-3 rounded border-r-2 border-blue-400">
+                                    <span v-html="item.exp_ar"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="item.type === 'tip'" class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                            <h3 class="font-en font-bold text-amber-800 mb-2 flex items-center gap-2">
+                                <i class="ph-fill ph-lightbulb"></i> {{ item.head_en }}
+                            </h3>
+                            <div class="space-y-2">
+                                <p class="font-en text-sm text-amber-900" v-html="item.text_en"></p>
+                                <p v-if="showArabic" class="is-rtl font-ar text-sm text-amber-900 border-r-2 border-amber-400 pr-2" v-html="item.text_ar"></p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="py-8 text-center text-slate-400 text-xs font-en border-t border-slate-200">
+            <p>IT Engineering - 2026 | 8085 Microprocessor Course</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+
+        createApp({
+            setup() {
+                const showArabic = ref(true);
+                const toggleLanguage = () => showArabic.value = !showArabic.value;
+
+                // --- Syntax Highlighter (Updated for Ch4 Instructions) ---
+                const highlightASM = (code) => {
+                    if (!code) return '';
+                    // All Chapter 4 Instructions added here
+                    const instructions = /\b(JMP|PCHL|JZ|JNZ|JC|JNC|JM|JP|JPO|JPE|CALL|RET|RZ|RC|RST|HLT|NOP|STC|CMC|EI|DI|SIM|RIM|MVI|MOV|LXI|LDA|STA|LHLD|SHLD|ADD|ADI|SUB|SUI|INR|DCR|DAD|INX|DCX|IN|OUT)\b/ig;
+                    const registers = /\b(A|B|C|D|E|H|L|SP|PC|PSW|M)\b/g;
+                    const hex = /\b([0-9][0-9A-F]*H?|[0-9A-F]+H)\b/ig;
+                    const label = /\b([A-Z0-9_]+:)/ig;
+
+                    return code.split('\n').map(line => {
+                        let [codePart, ...commentParts] = line.split(';');
+                        let comment = commentParts.join(';');
+
+                        if (codePart) {
+                            codePart = codePart
+                                .replace(label, '<span class="asm-label">$1</span>')
+                                .replace(instructions, '<span class="asm-cmd">$1</span>')
+                                .replace(hex, '<span class="asm-num">$1</span>')
+                                .replace(registers, '<span class="asm-reg">$1</span>');
+                        }
+                        if (comment !== undefined && comment !== "") return `${codePart}<span class="asm-comment">;${comment}</span>`;
+                        return codePart;
+                    }).join('\n');
+                };
+
+                // --- DATA STORE (Complete & Comprehensive) ---
+                const chapterData = ref([
+                    {
+                        title_en: "1. The Basics: Program Flow Control",
+                        title_ar: "أساسيات التحكم في التدفق",
+                        desc_en: "Control instructions allow the computer to change the sequence of execution based on decisions or specific tasks.",
+                        desc_ar: "تسمح تعليمات التحكم للحاسوب بتغيير تسلسل التنفيذ بناءً على قرارات أو مهام محددة.",
+                        colorClass: "bg-indigo-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "Definitions",
+                                text_en: "• <b>JUMP Instructions:</b> Allow the program to move to any memory location.<br>• <b>CALL Instructions:</b> Used to execute a <b>subroutine</b> (a reusable block of code) and then return.",
+                                text_ar: "• <b>تعليمات JUMP:</b> تسمح للبرنامج بالانتقال لأي موقع في الذاكرة.<br>• <b>تعليمات CALL:</b> تستخدم لتنفيذ <b>دالة فرعية (Subroutine)</b> ثم العودة."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "2. Unconditional Jumps",
+                        title_ar: "القفز غير المشروط",
+                        desc_en: "These instructions force a jump regardless of the status flags.",
+                        desc_ar: "هذه التعليمات تجبر المعالج على القفز بغض النظر عن حالة الرايات (Flags).",
+                        colorClass: "bg-blue-600",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "JMP vs PCHL",
+                                text_en: "• <code>JMP Address</code>: 3-byte instruction. Uses <b>Direct Addressing</b>. Format: <code>C3</code> followed by address.<br>• <code>PCHL</code>: 1-byte instruction. Uses <b>Register Indirect Addressing</b>. Copies HL into PC (Program continues at address in HL).",
+                                text_ar: "• <code>JMP</code>: تعليمة من 3 بايت. قفز مباشر لعنوان محدد.<br>• <code>PCHL</code>: تعليمة من 1 بايت. قفز غير مباشر (تنسخ محتوى <code>HL</code> إلى <code>PC</code>)."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "3. Conditional Jumps (Decision Making)",
+                        title_ar: "القفز المشروط (اتخاذ القرارات)",
+                        desc_en: "These allow the program to make choices based on the <b>Flags</b>. If Logic is True -> Jump. If False -> Continue.",
+                        desc_ar: "تسمح للبرنامج باتخاذ قرارات بناءً على <b>الرايات</b>. إذا تحقق الشرط -> يقفز. إذا لم يتحقق -> يكمل.",
+                        colorClass: "bg-teal-500",
+                        items: [
+                            {
+                                type: "table",
+                                headers: ["Instruction", "Meaning", "Flag Condition"],
+                                rows: [
+                                    ["<code>JZ</code> / <code>JNZ</code>", "Jump Zero / Not Zero", "Z=1 / Z=0"],
+                                    ["<code>JC</code> / <code>JNC</code>", "Jump Carry / No Carry", "CY=1 / CY=0"],
+                                    ["<code>JM</code> / <code>JP</code>", "Jump Minus / Positive", "S=1 / S=0"],
+                                    ["<code>JPO</code> / <code>JPE</code>", "Jump Parity Odd / Even", "P=0 / P=1"]
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "4. Subroutines (CALL & RET)",
+                        title_ar: "الدوال الفرعية (CALL & RET)",
+                        desc_en: "Subroutines save memory space. <code>CALL</code> executes subroutine, <code>RET</code> returns.",
+                        desc_ar: "الدوال الفرعية توفر مساحة الذاكرة. <code>CALL</code> تنفذ الدالة، و <code>RET</code> تعود للبرنامج الأصلي.",
+                        colorClass: "bg-purple-600",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "Execution Logic",
+                                text_en: "• <b>CALL Address:</b><br>1. Pushes <b>Current PC</b> (Return Address) to Stack.<br>2. Jumps to subroutine address.<br>• <b>RET (Return):</b><br>1. POPs top of Stack back into PC.<br>2. Program resumes after CALL.",
+                                text_ar: "• <b>CALL:</b> تحفظ عنوان العودة (PC الحالي) في المكدس، ثم تقفز للدالة.<br>• <b>RET:</b> تسحب العنوان من المكدس وتعيده للـ PC، ليكمل البرنامج."
+                            },
+                            {
+                                type: "list",
+                                head_en: "Conditional Returns",
+                                text_en: "Just like jumps, you can return based on flags (e.g., <code>RZ</code> = Return if Zero, <code>RC</code> = Return if Carry).",
+                                text_ar: "مثل القفز، يمكنك العودة بناءً على شرط (مثلاً <code>RZ</code> تعود فقط إذا كانت النتيجة صفراً)."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "5. Restart (RST) Instructions",
+                        title_ar: "تعليمات إعادة التشغيل (RST)",
+                        desc_en: "Special 1-byte CALL instructions that jump to fixed memory locations.",
+                        desc_ar: "تعليمات <code>CALL</code> خاصة (1 بايت) تقفز لعناوين ثابتة في الذاكرة.",
+                        colorClass: "bg-orange-500",
+                        items: [
+                            {
+                                type: "tip",
+                                head_en: "The RST Formula",
+                                text_en: "Address = N × 8.<br>Example: <code>RST 5</code> → 5 × 8 = 40 (Decimal). In Hex, 40 is <b>0028H</b>.<br>So, <code>RST 5</code> is equivalent to <code>CALL 0028H</code>.",
+                                text_ar: "<b>المعادلة:</b> العنوان = الرقم × 8.<br>مثال: <code>RST 5</code> تعني 5×8=40، وبالهيكس <code>0028H</code>.<br>إذن هي تكافئ <code>CALL 0028H</code>."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "6. Machine Control & Miscellaneous",
+                        title_ar: "التحكم بالآلة وأوامر متنوعة",
+                        colorClass: "bg-gray-600",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "Instructions",
+                                text_en: "• <code>HLT</code>: Halt. Stops processor until reset/interrupt.<br>• <code>NOP</code>: No Operation. Does nothing (used for delays).<br>• <code>STC</code>: Set Carry (CY=1).<br>• <code>CMC</code>: Complement Carry (Invert CY).",
+                                text_ar: "• <code>HLT</code>: إيقاف المعالج.<br>• <code>NOP</code>: لا شيء (تستخدم للتأخير الزمني).<br>• <code>STC</code>: ضبط الحمل (جعل CY=1).<br>• <code>CMC</code>: عكس الحمل (CY = NOT CY)."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "7. Interrupts & Masking (Crucial)",
+                        title_ar: "المقاطعات والقناع (هام جداً)",
+                        desc_en: "This is often the most complex part of the exam.",
+                        desc_ar: "هذا الجزء هو الأكثر تعقيداً في الامتحانات عادة.",
+                        colorClass: "bg-rose-500",
+                        items: [
+                            {
+                                type: "list",
+                                head_en: "Hardware Interrupts List",
+                                text_en: "1. <b>TRAP:</b> Highest priority, Non-Maskable (cannot be disabled).<br>2. <b>RST 7.5:</b> Positive Edge triggered.<br>3. <b>RST 6.5 / 5.5:</b> Level triggered.<br>4. <b>INTR:</b> Level triggered (Lowest priority).",
+                                text_ar: "1. <b>TRAP:</b> أعلى أولوية، لا يمكن تعطيله.<br>2. <b>RST 7.5:</b> يعمل بالحافة الصاعدة.<br>3. <b>RST 6.5/5.5:</b> يعمل بالمستوى (Level).<br>4. <b>INTR:</b> أقل أولوية."
+                            },
+                            {
+                                type: "list",
+                                head_en: "Enable/Disable & SIM/RIM",
+                                text_en: "• <code>EI</code>: Enable Interrupts (Must use to turn on).<br>• <code>DI</code>: Disable Interrupts.<br>• <code>SIM</code>: Set Interrupt Mask (Write to mask 7.5, 6.5, 5.5 or send Serial Data). Logic: 1=OFF (Masked).<br>• <code>RIM</code>: Read Interrupt Mask (Read status/Serial Data).",
+                                text_ar: "• <code>EI</code>: تفعيل المقاطعات.<br>• <code>DI</code>: تعطيل المقاطعات.<br>• <code>SIM</code>: تستخدم لحجب (تعطيل) المقاطعات. المنطق: 1=تعطيل.<br>• <code>RIM</code>: لقراءة حالة المقاطعات."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "8. Solved Examples (Complex Parts)",
+                        title_ar: "أمثلة محلولة (الأجزاء المعقدة)",
+                        colorClass: "bg-emerald-500",
+                        items: [
+                            {
+                                type: "code",
+                                code: `START:  MVI B, 10      ; Load B with 10
+LOOP:   DAD H          ; Double HL
+        DCR B          ; Decrement B
+        JNZ LOOP       ; Jump if B != 0
+ENDS:   JMP ENDS       ; Infinite loop`,
+                                exp_en: "<b>Example 1: Conditional Loop</b><br>1. <code>MVI B, 10</code>: Loop counter = 10.<br>2. <code>JNZ LOOP</code> checks Zero Flag.<br>3. Result: <code>DAD H</code> executes exactly 10 times.",
+                                exp_ar: "<b>مثال 1: تحليل الحلقة</b><br>1. العداد B يبدأ بـ 10.<br>2. <code>JNZ</code> تفحص راية الصفر.<br>3. النتيجة: الكود داخل الحلقة يتكرر 10 مرات بالضبط."
+                            },
+                            {
+                                type: "code",
+                                code: `2000: CALL 2040H  ; Call subroutine
+2003: ...         ; Next instruction`,
+                                exp_en: "<b>Example 2: Stack Trace</b><br>1. <code>CALL</code> at 2000H. Return Address is 2003H.<br>2. CPU pushes 2003H to Stack.<br>3. SP decreases by 2. High Byte (20) then Low Byte (03) stored.",
+                                exp_ar: "<b>مثال 2: تتبع المكدس</b><br>1. عنوان العودة هو 2003H.<br>2. المعالج يخزن 2003H في المكدس.<br>3. مؤشر SP ينقص بـ 2."
+                            },
+                            {
+                                type: "code",
+                                code: `MVI A, 0DH   ; Binary: 0000 1101
+SIM          ; Apply Mask
+EI           ; Enable Global Interrupts`,
+                                exp_en: "<b>Example 3: SIM Configuration</b><br>Task: Enable RST 6.5, Disable 7.5 & 5.5.<br>• Bit 3 (MSE)=1 (Enable Change).<br>• Bit 2 (M7.5)=1 (Disable).<br>• Bit 1 (M6.5)=0 (Enable).<br>• Bit 0 (M5.5)=1 (Disable).<br>Result: <code>0000 1101</code> = <code>0DH</code>.",
+                                exp_ar: "<b>مثال 3: إعداد SIM</b><br>المطلوب: تفعيل RST 6.5 وتعطيل البقية.<br>• البت 3=1 (تفعيل التغيير).<br>• البت 2=1 (تعطيل 7.5).<br>• البت 1=0 (تفعيل 6.5).<br>• البت 0=1 (تعطيل 5.5).<br>الكود الناتج: <code>0DH</code>."
+                            }
+                        ]
+                    },
+                    {
+                        title_en: "Final Checklist for Exam",
+                        title_ar: "قائمة المراجعة النهائية للامتحان",
+                        colorClass: "bg-slate-500",
+                        items: [
+                            { type: "list", head_en: "PCHL vs JMP", text_en: "Don't confuse them. PCHL jumps to address *inside* register HL.", text_ar: "لا تخلط بينهم. PCHL تقفز للعنوان الموجود *داخل* السجل HL." },
+                            { type: "list", head_en: "Check Flags", text_en: "<code>JNZ</code> jumps if Z=0 (Not Zero).", text_ar: "تذكر: JNZ تقفز إذا كانت النتيجة ليست صفراً." },
+                            { type: "list", head_en: "RST Math", text_en: "Remember 'times 8'. RST 7 = 56 = 38H.", text_ar: "تذكر قاعدة الضرب في 8." },
+                            { type: "list", head_en: "SIM vs RIM", text_en: "SIM = Set (Write/SOD). RIM = Read (Read/SID).", text_ar: "SIM للكتابة والضبط، RIM للقراءة." },
+                            { type: "list", head_en: "Interrupt Enable", text_en: "Even if unmasked, interrupts won't work without <code>EI</code>.", text_ar: "حتى لو ألغيت القناع، لن تعمل المقاطعات إلا باستخدام <code>EI</code>." }
+                        ]
+                    }
+                ]);
+
+                return { showArabic, toggleLanguage, chapterData, highlightASM };
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>
